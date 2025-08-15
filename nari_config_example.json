@@ -1,0 +1,29 @@
+{
+    "devices": [
+        {
+            "name": "null",
+            "address": "null",
+            "instance_name": "null"
+        },
+    ],
+    "master_device": {
+        "name": "null",
+        "address": "null",
+        "instance_name": "null"
+    },
+    "ui_settings": {
+        "polling_rate": 3
+    },
+    "themes": [
+        {
+            "name": "null",
+            "presets": [
+                {
+                    "device_address": "null",
+                    "preset_name": "null"
+                }
+            ]
+
+        }
+    ]
+}

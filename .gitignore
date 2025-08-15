@@ -1,0 +1,15 @@
+.venv
+__pycache__
+.vscode
+.idea
+nari_app/cache
+nari_app/callbacks/side_nav_callback.py
+nari_app/preset_config
+nari_app/app_ids.py
+nari_app/dev_nari_launcher.cmd
+.env
+data.json
+nari_config.json
+presets.json
+test_stuff.py
+wsgi.py
