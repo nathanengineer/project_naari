@@ -11,6 +11,9 @@ Main Dash app bootstrap for the WLED Controller.
 from __future__ import annotations
 import time
 import os
+import sys
+# This is here bellow to handle directory pathway shenanigans
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from dotenv import load_dotenv
 from dash import Dash, html, dcc, Output, Input
