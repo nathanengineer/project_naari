@@ -21,18 +21,22 @@ import dash_bootstrap_components as dbc
 
 
 #------------------------- NARI Dependencies ---------------------------------------------#
-from nari_app.util.util_functions import device_load, get_devices_ip
+from nari_app.util.util_functions import device_load, get_devices_ip, device_presets_mapping
 
 from nari_app.util.initial_load import get_initial_load
 from nari_app.ui_parts.navbar import navbar
 from nari_app.ui_parts.sidebar import sidebar
 from nari_app.ui_parts.main_content import main_content
 from nari_app.ui_parts.popups import refresh_popup
+
+from nari_app.modals.config_modal import config_modal
+
 from nari_app.callbacks.status_callbacks import status_callbacks
 from nari_app.callbacks.content_callback import main_content_callback
-from nari_app.modals.config_modal import config_modal
 from nari_app.callbacks.config_callbacks import config_callbacks
-from nari_app.callbacks.mode_settings_callback import mode_settings_callback
+from nari_app.callbacks.theme_settings_callback import theme_settings_callback
+from nari_app.callbacks.device_settings_callback import device_settings_callback
+from nari_app.callbacks.general_settings_callback import general_settings_callback
 from nari_app.callbacks.page_load_callback import nari_settings_updated
 
 
@@ -83,12 +87,12 @@ def app_layout():
                 # Hidden stores (default shapes matter for downstream callbacks)
                 dcc.Store(id ='initial_device_catch_data', data=polled_devices),
                 dcc.Store(id='device_catch_data', data=None),
-                dcc.Store(id='devices_catch_presets', data=polled_presets),
+                dcc.Store(id='devices_catch_presets', data=device_presets_mapping(polled_presets, nari_settings['devices'])), # TODO: remember to have this in every insert
                 dcc.Store(id='elements_initialized', data=False),
                 dcc.Store(id='nari_settings', data=nari_settings),
                 dcc.Store(id='auto_mode', data=False),  # Initial_Auto_Mode
                 html.Div(id='auto_off_switch_trigger', n_clicks=0),
-                dcc.Store(id='data_app_load_check', data=False),
+                dcc.Store(id='data_app_load_check', data=True), # TODO: need to return to False
                 dcc.Store(id='load_check_2', data=False),
                 refresh_popup()
             ]
@@ -103,7 +107,7 @@ def app_layout():
                 id='app_sidebar',
                 xs=12,
                 md=3,
-                children= sidebar(nari_settings['modes'])
+                children= sidebar(nari_settings['themes'])
             ),
             dbc.Col(
                 id='app_main_content',
@@ -150,15 +154,16 @@ def dash_app():
     """
 
     # callable so layout is re-evaluated on hard refresh
-    app.layout =  app_layout
+    app.layout =  app_layout()
 
     # register your callback groups (they already take `app`)
-    nari_settings_updated(app)
-    status_callbacks(app)
-    main_content_callback(app)
+    #nari_settings_updated(app)
+    #status_callbacks(app)
+    #main_content_callback(app)
     config_callbacks(app)
-    mode_settings_callback(app)
-    #global_settings_callback(app)
+    theme_settings_callback(app)
+    device_settings_callback(app)
+    general_settings_callback(app)
 
 
     # Segment bellow is currently the only way to prevent and setup a global prevent 'Initial Call' due to using dynamic widgets and callbacks
@@ -175,6 +180,8 @@ def dash_app():
 
 def run_dash():
     app = dash_app()
+    #app.config.suppress_callback_exceptions = True
+
     app.run(debug=DEBUG, host=HOST, port=PORT, threaded=True, use_reloader=RELOADER)
 
 if __name__ == '__main__':

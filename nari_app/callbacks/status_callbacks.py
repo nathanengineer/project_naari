@@ -369,7 +369,7 @@ def device_preset_list(device_presets):
     #presets = [presets.get('data', None) for presets in device_preset if presets['ip'] == ip_name][0]
     presets = device_presets.get('data', None)
     if not presets:
-        return None
+        return []
     preset_sorted = {
         int(k): v
         for k, v in sorted(

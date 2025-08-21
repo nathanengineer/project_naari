@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 
-from nari_app.util.config_builder import DeviceConfig, MasterDeviceConfig
+from nari_app.util.config_builder import DeviceConfig
 
 # Notes for color usage:
 # - Primary   -> Active / Working
