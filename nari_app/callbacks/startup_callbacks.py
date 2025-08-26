@@ -1,3 +1,12 @@
+"""
+Handles page load initialization for the app.
+
+This includes the following functionalities:
+    - Validating or rebuilding the device cache
+    - Preparing initial settings and enabling key functionality
+    - Pulling the initial app configuration settings
+
+"""
 
 from __future__ import annotations
 import time
@@ -5,15 +14,20 @@ import time
 from dash import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from nari_app.ui_parts.main_content import main_content
-from nari_app.modals.config_modal import config_modal
-from nari_app.util.config_builder import NariSettingsConfig
+
 from nari_app.util.wled_device_status import poll_all_devices
 from nari_app.util.util_functions import get_devices_ip
 
 
-def nari_settings_updated(app):
-    
+def startup_callbacks(app):
+    """
+    Register callbacks related to app startup and page load behavior.
+
+    Includes:
+        - Validating or rebuilding the device cache on initial load
+        - Enabling polling once cache and settings are ready
+    """
+
     @app.callback(
         [
             Output('poll-interval', 'disabled'),
@@ -52,22 +66,3 @@ def nari_settings_updated(app):
 
         # TODO: pop up error needs to be done.
         raise PreventUpdate
-
-    @app.callback(
-        [
-            Output('room-theme-mode', 'options'),
-            Output('app_main_content', 'children'),
-            Output('config_modal_container', 'children')
-        ],
-        Input('nari_settings', 'data'),
-    )
-    def ui_updated(nari_settings: NariSettingsConfig):
-        """
-           Rebuild UI sections when `nari_settings` changes. Normally after Config Save.
-        """
-        themes = nari_settings.get('themes', [])
-        theme_options = [ {'label': theme['name'], 'value': theme['id']} for theme in themes ]
-
-        return theme_options, main_content(nari_settings['devices']), config_modal(nari_settings)
-
-

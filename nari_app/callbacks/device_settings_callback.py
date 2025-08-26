@@ -1,4 +1,13 @@
-""" Modular that handles the Callbacks of the Device Tab of the Config Modal. """
+"""
+Handles callbacks related to the Device tab in the Config Modal.
+
+These callbacks control the UI and interactive behavior of device cards,
+including expanding or collapsing individual device sections, managing
+the Master Sync setting, and dynamically adding or removing devices.
+
+All functionality is limited to the configuration UI — no real-time
+device actions are performed here.
+"""
 
 import dash.exceptions
 from dash import html, Input, Output, State, ALL, ctx, MATCH
@@ -12,12 +21,13 @@ COLLAPSE_CLOSE_SYMBOL = html.I(className="bi bi-caret-down-fill fs-5")
 
 def device_settings_callback(app):
     """
-        Register all Dash callbacks that power the Device Settings tab.
+    Register callbacks for the Device Settings tab in the Config Modal.
 
-        This function wires the backend logic for device configuration,
-        including adding, updating, and removing devices.
+    Includes:
+        - Toggling collapse state and editability of device cards
+        - Enforcing a single Master Sync device selection
+        - Adding or removing device entries from the configuration stack
     """
-    #TODO: add element_inizialise prevension, is needed?
     @app.callback(
         [
             Output({'type': 'device_collapse_element', 'device_id': MATCH}, 'is_open'),
