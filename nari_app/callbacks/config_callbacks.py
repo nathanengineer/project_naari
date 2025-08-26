@@ -1,4 +1,11 @@
-""" Modular that handles the backend callbacks of the Config Modal. """
+"""
+Handles top-level callbacks for the Config Modal container.
+
+This module manages the opening and closing of the modal, along with saving
+user-defined settings to the application's configuration state. It also
+resets dynamic elements like card stacks and ensures proper state handling
+when canceling or closing the modal.
+"""
 
 from dash.exceptions import PreventUpdate
 from dash import Input, Output, State, ALL, ctx
@@ -8,6 +15,17 @@ from nari_app.util.config_builder import DeviceConfig, UISettings, ThemeSelectio
 
 
 def config_callbacks(app):
+    """
+        Register callbacks for the main Config Modal container.
+
+        Includes:
+            - Opening and closing the modal via config/save/cancel buttons
+            - Saving all tab-based settings into the nari_settings store
+            - Resetting stack state and button counters when modal is reopened
+
+        Future adjustments may expand cancel behavior to fully revert
+        changes to previously saved configuration.
+        """
     @app.callback(
         [
             Output("config_modal", 'is_open'),
@@ -71,7 +89,7 @@ def config_callbacks(app):
 
 
     @app.callback(
-        Output("nari_settings", "data"),
+        Output("nari_settings", "data", allow_duplicate=True),
         Input("config_save_button", "n_clicks"),
         [
             # Devices tab
@@ -90,8 +108,7 @@ def config_callbacks(app):
 
             # Existing config (optional, fallback)
             State("nari_settings", "data"),
-        ],
-        prevent_initial_call=True
+        ]
     )
     def save_config( n_clicks, device_instance_names, device_addresses, device_master_syncs, device_actives, theme_names,   # pylint: disable=too-many-arguments, too-many-positional-arguments
                      theme_preset_values, ui_setting_values, ui_setting_metas, existing_config) -> NariSettingsConfig:

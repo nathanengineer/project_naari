@@ -105,7 +105,7 @@ def _theme_dropdown(themes: list[ThemeSelectionConfig]) -> dbc.Select:
     """ Dropdown for selecting room theme/mode. """
     return dbc.Select(
         id='room-theme-mode',
-        options=[selection['name'] if selection['name'] else "" for selection in themes],
+        options=[ {'label': theme['name'], 'value': theme['id']} if theme['id'] else "" for theme in themes ],
         value="",
         className="align-item-middle",
         style={"width": "auto"}

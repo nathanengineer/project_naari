@@ -1,21 +1,55 @@
 {
     "devices": [
         {
+            "id": null,
             "name": "null",
             "address": "null",
-            "instance_name": "null"
-        },
+            "instance_name": "null",
+            "master_sync": false,
+            "active": false
+        }
     ],
-    "master_device": {
-        "name": "null",
-        "address": "null",
-        "instance_name": "null"
-    },
     "ui_settings": {
-        "polling_rate": 3
+        "app_name": {
+            "value": "N.A.A.R.I Control Panel",
+            "type": "str"
+        },
+        "polling_rate": {
+            "value": 3,
+            "type": "int"
+        },
+        "connect_timeout": {
+            "value": 1,
+            "type": "int"
+        },
+        "read_timeout": {
+            "value": 1,
+            "type": "int"
+        },
+        "max_concurrency": {
+            "value": 10,
+            "type": "int"
+        },
+        "retries": {
+            "value": 2,
+            "type": "int"
+        },
+        "retry_backoff": {
+            "value": 0.25,
+            "type": "float"
+        },
+        "request_timeout": {
+            "value": 1,
+            "type": "int"
+        },
+        "ui_theme": {
+            "value": 0,
+            "type": "bool"
+        }
     },
     "themes": [
         {
+            "id": null,
             "name": "null",
             "presets": [
                 {

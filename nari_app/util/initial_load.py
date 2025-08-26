@@ -1,7 +1,7 @@
 import asyncio
 from threading import Lock
 
-from nari_app.util.util_functions import device_load
+from nari_app.util.config_builder import DeviceConfig
 from nari_app.util.wled_device_status import get_devices_ip, run_status, get_presets
 
 _load_lock = Lock()
@@ -9,7 +9,7 @@ _load_lock = Lock()
 INITIAL_DEVICES = None
 INITIAL_PRESETS = None
 
-def get_initial_load(nari_settings = device_load()):
+def get_initial_load(nari_devices: list[DeviceConfig]):
 
     global INITIAL_DEVICES, INITIAL_PRESETS
     if INITIAL_DEVICES is not None and INITIAL_PRESETS is not None:
@@ -17,7 +17,7 @@ def get_initial_load(nari_settings = device_load()):
 
     with _load_lock:
         if INITIAL_DEVICES is None or INITIAL_PRESETS is None:
-            devices_ip = get_devices_ip(nari_settings)
+            devices_ip = get_devices_ip(nari_devices)
 
             try:
                 INITIAL_DEVICES = asyncio.run(run_status(devices_ip))

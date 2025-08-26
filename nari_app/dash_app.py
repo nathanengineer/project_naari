@@ -16,12 +16,12 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from dotenv import load_dotenv
-from dash import Dash, html, dcc, Output, Input
+from dash import Dash, html, dcc, Output, Input, State
 import dash_bootstrap_components as dbc
 
 
 #------------------------- NARI Dependencies ---------------------------------------------#
-from nari_app.util.util_functions import device_load, get_devices_ip, device_presets_mapping
+from nari_app.util.util_functions import nari_config_load, device_polled_data_mapping
 
 from nari_app.util.initial_load import get_initial_load
 from nari_app.ui_parts.navbar import navbar
@@ -31,13 +31,18 @@ from nari_app.ui_parts.popups import refresh_popup
 
 from nari_app.modals.config_modal import config_modal
 
+
+from nari_app.callbacks.startup_callbacks import startup_callbacks
+from nari_app.callbacks.ui_refresh_callbacks import layout_refresh_callbacks
 from nari_app.callbacks.status_callbacks import status_callbacks
+from nari_app.callbacks.device_controls_callbacks import device_controls_callbacks
+from nari_app.callbacks.global_controls_callbacks import global_controls_callback
 from nari_app.callbacks.content_callback import main_content_callback
 from nari_app.callbacks.config_callbacks import config_callbacks
 from nari_app.callbacks.theme_settings_callback import theme_settings_callback
 from nari_app.callbacks.device_settings_callback import device_settings_callback
 from nari_app.callbacks.general_settings_callback import general_settings_callback
-from nari_app.callbacks.page_load_callback import nari_settings_updated
+
 
 
 MAINDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -65,59 +70,74 @@ def app_layout():
         A Dash Bootstrap Container containing the entire app layout.
     """
 
-    nari_settings = device_load()
+    nari_settings = nari_config_load()
 
     # Initial poll fetch
-    devices_ip_list = get_devices_ip(nari_settings)
-    polled_devices, polled_presets = get_initial_load(devices_ip_list)
+    polled_devices, polled_presets = get_initial_load(nari_devices=nari_settings.get('devices'))
 
     # Intentional pause to let devices settle before regular polling starts.
     # (Keeps first render consistent with initial poll results.)
     time.sleep(3)
 
-    return dbc.Container(
-    id = "app-container",
-    fluid=True,
-    children=[
-        html.Div(
-            children=[
-                dcc.Location(id='url', refresh=False),
-                dcc.Interval(id='poll-interval', interval=(POLL_INTERVAL * 1000), n_intervals=0, disabled=True),    # converting interval from sec -> ms
+    # TODO: is there a simplier way to do it than remember to add a funciton to it?
+    # Adds device_id to the polled data
+    polled_devices = device_polled_data_mapping(
+        cach_data=polled_devices,
+        devices=nari_settings.get('devices')
+    )
+    polled_presets = device_polled_data_mapping(
+        cach_data=polled_presets,
+        devices=nari_settings.get('devices')
+    )
 
-                # Hidden stores (default shapes matter for downstream callbacks)
-                dcc.Store(id ='initial_device_catch_data', data=polled_devices),
-                dcc.Store(id='device_catch_data', data=None),
-                dcc.Store(id='devices_catch_presets', data=device_presets_mapping(polled_presets, nari_settings['devices'])), # TODO: remember to have this in every insert
-                dcc.Store(id='elements_initialized', data=False),
-                dcc.Store(id='nari_settings', data=nari_settings),
-                dcc.Store(id='auto_mode', data=False),  # Initial_Auto_Mode
-                html.Div(id='auto_off_switch_trigger', n_clicks=0),
-                dcc.Store(id='data_app_load_check', data=True), # TODO: need to return to False
-                dcc.Store(id='load_check_2', data=False),
-                refresh_popup()
-            ]
-        ),
-        html.Div(
-            id='config_modal_container',
-            children=config_modal(nari_settings)
-        ),
-        html.Div(navbar()),
-        dbc.Row(children=[
-            dbc.Col(
-                id='app_sidebar',
-                xs=12,
-                md=3,
-                children= sidebar(nari_settings['themes'])
+    return dbc.Container(
+        id = "app-container",
+        fluid=True,
+        children=[
+            html.Div(
+                children=[
+                    dcc.Location(id='url', refresh=False),
+                    # converting interval from sec -> ms
+                    dcc.Interval(id='poll-interval', interval=(nari_settings['ui_settings']['polling_rate']['value'] * 1000), n_intervals=0, disabled=True),
+
+                    # Hidden stores (default shapes matter for downstream callbacks)
+                    dcc.Store(id='nari_settings', data=nari_settings, storage_type='session'),
+                    dcc.Store(id ='initial_device_catch_data', data=polled_devices, storage_type='session'),
+                    dcc.Store(id='device_catch_data', data=None, storage_type='session'),
+                    dcc.Store(id='devices_catch_presets', data=polled_presets, storage_type='session'),
+
+                    # For Initial Calls, Chains, and preventions
+                    dcc.Store(id='elements_initialized', data=None, storage_type='session'),
+                    dcc.Store(id='data_app_load_check', data=False, storage_type='session'),
+                    dcc.Store(id='brightness_chain_trigger', data=None, storage_type='session'),
+
+                    dcc.Store(id='auto_mode', data=False),  # Initial_Auto_Mode
+
+                    refresh_popup()
+                ]
             ),
-            dbc.Col(
-                id='app_main_content',
-                xs=12,
-                md=9,
-                children=main_content(nari_settings['devices'])
-            )
-        ]),
-        html.Div(id='master-dumb-dash-1', style={'display': "none"})
-    ])
+            html.Div(
+                id='config_modal_container',
+                children=config_modal(nari_settings)
+            ),
+            html.Div(navbar()),
+            dbc.Row(children=[
+                dbc.Col(
+                    id='app_sidebar',
+                    xs=12,
+                    md=3,
+                    children= sidebar(nari_settings.get('themes'))
+                ),
+                dbc.Col(
+                    id='app_main_content',
+                    xs=12,
+                    md=9,
+                    children=[] # Uses callback to provide smoother rendering due to any config changes
+                )
+            ]),
+            html.Div(id='master-dumb-dash-1', style={'display': "none"})
+        ]
+    )
 
 def dash_app():
     """ Create and Configures the Dash App"""
@@ -157,9 +177,12 @@ def dash_app():
     app.layout =  app_layout()
 
     # register your callback groups (they already take `app`)
-    #nari_settings_updated(app)
-    #status_callbacks(app)
-    #main_content_callback(app)
+    startup_callbacks(app)
+    layout_refresh_callbacks(app)
+    status_callbacks(app)
+    device_controls_callbacks(app)
+    main_content_callback(app)
+    global_controls_callback(app)
     config_callbacks(app)
     theme_settings_callback(app)
     device_settings_callback(app)
@@ -170,19 +193,19 @@ def dash_app():
     @app.callback(
         Output('elements_initialized', 'data'),
         Input('device_catch_data', 'data'),
-        prevent_initial_call=True
+        State('elements_initialized', 'data')
     )
-    def elements_started(_):
+    def elements_started(_, prev):
         """Mark the app as initialized once device data has been set at least once."""
         return True
 
     return app
 
-def run_dash():
-    app = dash_app()
-    #app.config.suppress_callback_exceptions = True
+#def run_dash():
 
-    app.run(debug=DEBUG, host=HOST, port=PORT, threaded=True, use_reloader=RELOADER)
 
 if __name__ == '__main__':
-    run_dash()
+    the_app = dash_app()
+    # app.config.suppress_callback_exceptions = True
+
+    the_app.run(debug=DEBUG, host=HOST, port=PORT, threaded=True, use_reloader=RELOADER)

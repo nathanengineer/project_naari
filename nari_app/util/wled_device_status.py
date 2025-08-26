@@ -3,21 +3,22 @@ import json
 from typing import Any, Iterable, Optional
 from threading import Lock
 
-from nari_app.util.util_functions import device_load, get_devices_ip
+from nari_app.util.util_functions import nari_config_load, get_devices_ip
 
 # Adds lock onto App polling events, preventing an accidental flooding of calls
 _POLL_LOCK = Lock()
 
-# TODO: Maybe insert into config file?
+# TODO: PULL dynamic values from config file.
 CONNECT_TIMEOUT = 2.0         # seconds to establish TCP
-READ_TIMEOUT = 5.0            # seconds to read response
+READ_TIMEOUT = 3.0            # seconds to read response
 MAX_CONCURRENCY = 10.0        # cap active requests
 RETRIES = 2
 RETRY_BACKOFF = 0.25        # slows down retry in seconds
 
 # For Initial Load, and use during Testing
-DEVICES_LOADED = device_load()
+DEVICES_LOADED = nari_config_load()
 DEVICEs_IP = [info['address'] for info in DEVICES_LOADED['devices']]
+
 
 def _timeout() -> httpx.Timeout:
     """ Adds a Timeout parameter to Client connections by httpx. """
@@ -112,7 +113,7 @@ def poll_all_devices(device_address_list: Iterable[str] | None = None):
         # TODO: add logging here for error
         device_address_list = get_devices_ip()
 
-    if not _POLL_LOCK.acquire_lock(blocking=False):
+    if not _POLL_LOCK.acquire_lock(blocking=False):     # pylint: disable=no-member
         # TODO: will need to log this
         print("Skipping poll_all_devices — already running.")
         return None

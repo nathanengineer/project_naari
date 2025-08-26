@@ -1,4 +1,13 @@
-""" Modular contains necessary backend callbacks for the Theme Modes Tab in the Config Modal. """
+""""
+Handles callbacks related to the Theme tab in the Config Modal.
+
+These callbacks manage the theme card UI widgets, including expanding/collapsing
+theme sections, assigning per-device presets, editing theme names, and adding
+or removing theme cards.
+
+All behavior in this module is scoped to UI and state changes within the
+configuration interface — no live device commands are issued.
+"""
 
 import dash.exceptions
 from dash import Input, Output, State, html, ALL, ctx, MATCH
@@ -14,7 +23,15 @@ COLLAPSE_CLOSE_SYMBOL = html.I(className="bi bi-caret-down-fill fs-5")
 
 
 def theme_settings_callback(app):
+    """
+        Register callbacks for the Theme Settings tab in the Config Modal.
 
+        Includes:
+            - Toggling collapsible sections for each theme
+            - Populating per-device preset dropdowns for each theme
+            - Enabling or disabling theme name editing
+            - Adding or removing theme cards from the stack
+    """
     @app.callback(
         [
             Output({'type': 'theme_collapse_element', 'theme_id': ALL}, 'is_open'),
@@ -38,7 +55,9 @@ def theme_settings_callback(app):
 
         collapse_clicks_mapping = {element['id']['theme_id']: element['value'] for element in widget_layout}
 
-        device_current_presets_mapping = {preset_set['device_id']: device_preset_list(preset_set) for preset_set in cach_devices_preset}
+        current_config_devices_list = [device['id'] for device in nari_settings['devices']]
+
+        device_current_presets_mapping = {preset_set['device_id']: device_preset_list(preset_set) for preset_set in cach_devices_preset if preset_set['device_id'] in current_config_devices_list}
 
         dropdown_options_mapping = {element['id']['theme_id']: device_current_presets_mapping for element in widget_layout}
 
@@ -65,10 +84,10 @@ def theme_settings_callback(app):
         #   Prevents blanks from being saved by accident.
         for index, selections in enumerate(dropdowns_options_flatten):
             if len(selections) == 0:
-                dropdowns_options_flatten[index] = [dropdown_values[index]]
+                dropdowns_options_flatten[index] = [dropdown_values[index]] if len(dropdown_values[index]) else ""
 
         # TODO: Have this as a log inorder to populate list values in the background?
-        return is_open_list, button_children_list , dropdowns_options_flatten, dropdown_values
+        return is_open_list, button_children_list, dropdowns_options_flatten, dropdown_values
 
 
     @app.callback(
@@ -149,8 +168,7 @@ def theme_settings_callback(app):
             return updated_children
         return current_children_set
 
-
-
+#-------------------------------------Helper Functions----------------------------------------------#
 
 def compute_dropdown_values_mapping(dropdown_options_mapping: dict, nari_settings: NariSettingsConfig) -> dict[int, dict[int, str]]:
     """theme_id -> { device_id -> selected_value } with config as source of truth."""

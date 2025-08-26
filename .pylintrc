@@ -1,0 +1,13 @@
+[MASTER]
+
+[FORMAT]
+max-line-length=175
+# Whitelist of variable names that are fine to use even though they
+#  don't meet the regex criteria above
+good-names=_
+
+[Messages Control]
+disable=
+    import-error,
+    unused-argument,
+    wrong-import-position
