@@ -14,9 +14,9 @@ import dash.exceptions
 from dash import Input, Output, State, ALL, ctx
 from dash.exceptions import PreventUpdate
 
-from nari_app.util.config_builder import DeviceConfig, UISettings
-from nari_app.util.send_payload import  send_preset, brightness_adjustment, PayloadRetryError
-from nari_app.util.util_functions import get_device
+from naari_app.util.config_builder import DeviceConfig, UISettings
+from naari_app.util.send_payload import  send_preset, brightness_adjustment, PayloadRetryError
+from naari_app.util.util_functions import get_device
 
 __all__ = ['device_controls_callbacks']
 
@@ -46,11 +46,11 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
             State('auto_mode', 'data'),
             State('device_catch_data', 'data'),
             State('devices_catch_presets', 'data'),
-            State('nari_settings', 'data'),
+            State('naari_settings', 'data'),
         ]
     )
     def brightness_preset_setter(_brightness_chain_trigger, preset_option, is_auto_mode, polled_cach_data,      #pylint: disable=too-many-locals, too-many-branches
-                                 cached_presets, nari_settings):
+                                 cached_presets, naari_settings):
         """
             The selected preset will perform the following actions
             1) will adjust the Brightness slider widget according to current polled device data
@@ -88,7 +88,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
 
                 for dev_id, preset_id_str in widget_preset_mapping.items():
                     if preset_id_str not in (None, "", "0"):
-                        device_info = get_device(devices=nari_settings['devices'], device_id=dev_id)
+                        device_info = get_device(devices=naari_settings['devices'], device_id=dev_id)
                         submissions[dev_id] = (int(preset_id_str), device_info)
 
                 devices_brightness = {
@@ -103,7 +103,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
 
                 selected_device = get_device(
                     device_id=triggered_device_id,
-                    devices=nari_settings['devices']
+                    devices=naari_settings['devices']
                 )
 
                 # For sending POST bellow
@@ -129,7 +129,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
                             _preset_sender,
                             preset_value,
                             target_device,
-                            nari_settings['ui_settings']
+                            naari_settings['ui_settings']
                         )
 
         values_out = []
@@ -149,12 +149,12 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
         Input({'type': "brightness_slider", 'device_id': ALL}, "value"),
         [
             State('auto_mode', 'data'),
-            State("nari_settings", 'data'),
+            State("naari_settings", 'data'),
             State('brightness_chain_trigger', 'data')
         ],
         prevent_initial_call=True
     )
-    def handle_brightness_changes(brightness_values, auto_mode, nari_settings, brightness_chain_trigger):
+    def handle_brightness_changes(brightness_values, auto_mode, naari_settings, brightness_chain_trigger):
         """
             Mirror slider values into the brightness indicators;
             if user-driven and auto mode is off, send a brightness update to the targeted device.
@@ -170,7 +170,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
         if not auto_mode:
             target_device_id = ctx.triggered_id['device_id']
             target_device = get_device(
-                devices=nari_settings['devices'],
+                devices=naari_settings['devices'],
                 device_id=target_device_id
             )
 
@@ -185,7 +185,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
                     brightness_adjustment(
                         change_value=changed_value,
                         device_info=target_device,
-                        ui_settings=nari_settings["ui_settings"]
+                        ui_settings=naari_settings["ui_settings"]
                     )
                 except PayloadRetryError as err:
                     # TODO: add trigger indicating what device had an error?

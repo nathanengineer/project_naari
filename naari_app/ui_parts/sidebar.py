@@ -9,7 +9,7 @@ Contains:
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 
-from nari_app.util.config_builder import ThemeSelectionConfig
+from naari_app.util.config_builder import ThemeSelectionConfig
 
 __all__=['sidebar']
 

@@ -57,7 +57,7 @@ class ThemeSelectionConfig(TypedDict):
     presets: list[DevicePreset]           # List of Devices Preset to Set
 
 
-class NariSettingsConfig(TypedDict):
+class NaariSettingsConfig(TypedDict):
     """ Full configuration file schema """
 
     devices: list[DeviceConfig]
@@ -67,8 +67,8 @@ class NariSettingsConfig(TypedDict):
 
 #-------------------------- Configer Functions -------------------------------#
 
-def make_empty_config(app_name: str = "WLED Controller") -> NariSettingsConfig:
-    """ Return a brand-new, valid empty Nari config (type-safe) """
+def make_empty_config(app_name: str = "WLED Controller") -> NaariSettingsConfig:
+    """ Return a brand-new, valid empty Naari config (type-safe) """
     return {
         "devices": [],
         "ui_settings": {
@@ -86,7 +86,7 @@ def make_empty_config(app_name: str = "WLED Controller") -> NariSettingsConfig:
     }
 
 
-def write_empty_config(path: str) -> NariSettingsConfig:
+def write_empty_config(path: str) -> NaariSettingsConfig:
     """
     Create an empty config file on disk and return it.
 
@@ -97,7 +97,7 @@ def write_empty_config(path: str) -> NariSettingsConfig:
         path: Destination JSON file path (e.g., CONFIG_PATH).
 
     Returns:
-        The written NariConfig.
+        The written NaariConfig.
 
     Raises:
         OSError: if the directory or file cannot be written.

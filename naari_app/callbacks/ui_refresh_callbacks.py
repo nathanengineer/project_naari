@@ -11,9 +11,9 @@ from __future__ import annotations
 
 from dash import Input, Output
 
-from nari_app.ui_parts.main_content import main_content
-from nari_app.modals.config_modal import config_modal
-from nari_app.util.config_builder import NariSettingsConfig
+from naari_app.ui_parts.main_content import main_content
+from naari_app.modals.config_modal import config_modal
+from naari_app.util.config_builder import NaariSettingsConfig
 
 
 def layout_refresh_callbacks(app):
@@ -31,13 +31,13 @@ def layout_refresh_callbacks(app):
             Output('app_main_content', 'children'),
             Output('config_modal_container', 'children')
         ],
-        Input('nari_settings', 'data'),
+        Input('naari_settings', 'data'),
     )
-    def ui_updated(nari_settings: NariSettingsConfig):
+    def ui_updated(naari_settings: NaariSettingsConfig):
         """
-           Rebuild UI sections when `nari_settings` changes. Normally after Config Save.
+           Rebuild UI sections when `naari_settings` changes. Normally after Config Save.
         """
-        themes = nari_settings.get('themes', [])
+        themes = naari_settings.get('themes', [])
         theme_options = [{'label': theme['name'], 'value': theme['id']} for theme in themes]
 
-        return theme_options, main_content(nari_settings['devices']), config_modal(nari_settings)
+        return theme_options, main_content(naari_settings['devices']), config_modal(naari_settings)

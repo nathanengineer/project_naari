@@ -10,9 +10,9 @@ import dash.exceptions
 from dash import Input, Output, State, ALL, ctx
 from dash.exceptions import PreventUpdate
 
-from nari_app.util.wled_device_status import get_devices_ip, poll_all_devices, poll_device_presets
-from nari_app.util.send_payload import send_device_power_update, PayloadRetryError
-from nari_app.util.util_functions import device_polled_data_mapping, is_device_active, get_device
+from naari_app.util.wled_device_status import get_devices_ip, poll_all_devices, poll_device_presets
+from naari_app.util.send_payload import send_device_power_update, PayloadRetryError
+from naari_app.util.util_functions import device_polled_data_mapping, is_device_active, get_device
 
 
 BUTTON_INDICATOR = {
@@ -36,23 +36,23 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
     @app.callback(
         Output('device_catch_data', 'data'),
         Input('poll-interval', 'n_intervals'),
-        State('nari_settings', 'data')
+        State('naari_settings', 'data')
     )
     # TODO: see if there a way I can send a notification or make a UI change if an error occures.
-    def poll_devices(_, nari_settings):
+    def poll_devices(_, naari_settings):
         if not ctx.triggered:
             raise PreventUpdate
 
         if ctx.triggered_id == 'poll-interval':
 
             ip_list = get_devices_ip(
-                nari_devices=nari_settings.get('devices'),
+                naari_devices=naari_settings.get('devices'),
                 get_inactive=False
             )
 
             catch_data = device_polled_data_mapping(
                 cach_data=poll_all_devices(device_address_list= ip_list),
-                devices=nari_settings.get('devices')
+                devices=naari_settings.get('devices')
             )
             if catch_data and all('data' in device for device in catch_data):
                 return catch_data
@@ -78,12 +78,12 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
         ],
         [
             State("devices_catch_presets", "data"),
-            State('nari_settings', 'data')
+            State('naari_settings', 'data')
         ],
         prevent_initial_call=True
     )
     # TODO: Improvements? Highlight mismatches or defualt sets on errors?
-    def preset_population(_app_load_check, _presets_refresh, cached_preset_data, nari_settings):
+    def preset_population(_app_load_check, _presets_refresh, cached_preset_data, naari_settings):
         """ Populate preset dropdowns for active devices and refresh data when triggered. Shows a popup to indicate success or failure during refresh. """
         if not ctx.triggered:
             raise dash.exceptions.PreventUpdate
@@ -94,10 +94,10 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
 
         if ctx.triggered_id == 'refresh_button':
             try:
-                device_ips = get_devices_ip(nari_devices=nari_settings.get('devices') )
+                device_ips = get_devices_ip(naari_devices=naari_settings.get('devices'))
                 cached_preset_data = device_polled_data_mapping(
                     cach_data=poll_device_presets(device_address_list = device_ips),
-                    devices=nari_settings.get('devices')
+                    devices=naari_settings.get('devices')
                 )
                 time.sleep(1)   # to provide time for async polling to catch up if needed with UI.
                 popup_message = "Presets Re-Loaded"
@@ -119,7 +119,7 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
             device_preset for device_preset in cached_preset_data
             if is_device_active(
                 device_id=device_preset['device_id'],
-                devices=nari_settings['devices']
+                devices=naari_settings['devices']
             )
         ]
         options_per_device = [device_preset_list(device_preset) for device_preset in active_devices_presets]
@@ -136,12 +136,12 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
         ],
         [
             State("device_catch_data", "data"),
-            State('nari_settings', 'data'),
+            State('naari_settings', 'data'),
             State('elements_initialized', 'data')
         ],
         prevent_initial_call=True,
     )
-    def device_power_button_status(_page_load_check, polled_data, _button_click, cached_device_data, nari_settings, elements_initialized):
+    def device_power_button_status(_page_load_check, polled_data, _button_click, cached_device_data, naari_settings, elements_initialized):
         """ Updates the Power Button widget color based on if device is on or off. """
         # Nothing polled yet? Don’t render.
         if not cached_device_data or not isinstance(cached_device_data, list):
@@ -159,7 +159,7 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
         if isinstance(triggered_id, dict) and triggered_id['type'] == 'power_button':   # Button Click / Manual Entry
             devices_cach_data = cached_device_data
             target_device = get_device(
-                devices=nari_settings['devices'],
+                devices=naari_settings['devices'],
                 device_id=triggered_id['device_id']
             )
         elif triggered_id == 'data_app_load_check':     # Initial Loads
@@ -186,7 +186,7 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
             data for data in devices_cach_data
             if is_device_active(
                 device_id=data.get('device_id'),
-                devices=nari_settings.get('devices')
+                devices=naari_settings.get('devices')
             )
         ]
 
@@ -209,7 +209,7 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
                     send_device_power_update(
                         status_update=new_state,
                         device_info=target_device,
-                        ui_settings=nari_settings['ui_settings']
+                        ui_settings=naari_settings['ui_settings']
                     )
                     indicator_status[target_id] = new_state
                 except PayloadRetryError as err:

@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 
 def navbar() -> dbc.Navbar:
-    """ Top navigation bar for the N.A.R.I. dashboard. """
+    """ Top navigation bar for the N.A.A.R.I. dashboard. """
     return dbc.Navbar(
         id="navbar_id",
         class_name="px-3",   # small horizontal padding
@@ -14,7 +14,7 @@ def navbar() -> dbc.Navbar:
                 class_name="ms-auto",  # push to the right
                 navbar=True,
                 children=[
-                    # Placeholder theme switch (more complicated than previoulsy thought)
+                    # Placeholder theme switch (more complicated than previously thought)
                     dbc.Switch(
                         id="dark_light_switch_id",
                         label="Light/Dark Mode",

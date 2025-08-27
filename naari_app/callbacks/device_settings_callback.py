@@ -12,7 +12,7 @@ device actions are performed here.
 import dash.exceptions
 from dash import html, Input, Output, State, ALL, ctx, MATCH
 
-from nari_app.modals.device_tab import device_card      # pylint: disable=import-error
+from naari_app.modals.device_tab import device_card      # pylint: disable=import-error
 
 # TODO: move this into master call class?
 COLLAPSE_OPEN_SYMBOL = html.I(className="bi bi-caret-left-fill fs-5")
@@ -82,10 +82,10 @@ def device_settings_callback(app):
         ],
         [
             State('devices_stack', 'children'),
-            State('nari_settings', 'data'),
+            State('naari_settings', 'data'),
         ],
     )
-    def add_remove_device_card(add_mode_click, remove_mode_clicks, current_children_set, nari_settings):    # pylint: disable=unused-argument
+    def add_remove_device_card(add_mode_click, remove_mode_clicks, current_children_set, naari_settings):    # pylint: disable=unused-argument
 
         if not ctx.triggered:
             raise dash.exceptions.PreventUpdate
@@ -96,7 +96,7 @@ def device_settings_callback(app):
         if triggered == 'device_add_button' and add_mode_click:     # pylint: disable=no-else-return
 
             # Collect existing device IDs from config and performce a safe additoin if nothing in config file.
-            device_ids = (device["id"] for device in nari_settings['devices'])
+            device_ids = (device["id"] for device in naari_settings['devices'])
             next_id = (max(device_ids) + 1) if device_ids else 1        # pylint: disable=using-constant-test
 
             # Setup the dictionary that will be sent

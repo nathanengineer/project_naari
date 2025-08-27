@@ -3,7 +3,7 @@
 import dash_bootstrap_components as dbc
 from dash import dcc
 
-from nari_app.util.config_builder import UISettings
+from naari_app.util.config_builder import UISettings
 
 __all__=['general_settings_container']
 
@@ -87,10 +87,10 @@ def _general_settings(setting_name: str, data: dict) -> dbc.Row:
     )
 
 
-def general_settings_container(nari_settings: UISettings) -> dbc.Container:
+def general_settings_container(naari_settings: UISettings) -> dbc.Container:
     """ HOlds the general setting widgets dictated by the config file. """
     return dbc.Container(
-        id = "nari_general_settings_container",
+        id = "naari_general_settings_container",
         fluid=True,     # aids when user opens up site on any platform
         class_name='justify-content-center',
         children=[
@@ -100,7 +100,7 @@ def general_settings_container(nari_settings: UISettings) -> dbc.Container:
                 gap=3,
                 class_name='d-flex justify-content-center',
                 children= [
-                    *[_general_settings(setting_name=key, data=value) for key, value in nari_settings.items()]
+                    *[_general_settings(setting_name=key, data=value) for key, value in naari_settings.items()]
                 ]
 
             )
