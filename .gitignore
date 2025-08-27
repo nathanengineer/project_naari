@@ -4,7 +4,6 @@ __pycache__
 .idea
 nari_app/callbacks/side_nav_callback.py
 nari_app/app_ids.py
-nari_app/dev_nari_launcher.cmd
 .env
 data.json
 nari_config.json
