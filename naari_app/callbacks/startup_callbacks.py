@@ -15,8 +15,8 @@ from dash import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 
-from nari_app.util.wled_device_status import poll_all_devices
-from nari_app.util.util_functions import get_devices_ip
+from naari_app.util.wled_device_status import poll_all_devices
+from naari_app.util.util_functions import get_devices_ip
 
 
 def startup_callbacks(app):
@@ -37,17 +37,17 @@ def startup_callbacks(app):
         Input('url', 'pathname'),
         [
             State('initial_device_catch_data', 'data'),
-            State('nari_settings', 'data')
+            State('naari_settings', 'data')
         ],
     )
     # TODO: see if there a way I can send a notification or make a UI change if an error occures.
-    def page_data_load(_, initial_cach_data, nari_settings):
+    def page_data_load(_, initial_cach_data, naari_settings):
         """
             On page load/reload, validate or rebuild device cache.
             Enables poller only after cache looks valid.
         """
-        if not nari_settings:
-            print("nari no go")
+        if not naari_settings:
+            print("naari no go")
             raise PreventUpdate
 
         cach_data = initial_cach_data
@@ -58,7 +58,7 @@ def startup_callbacks(app):
             print("initial polling failed, extra polling")  # TODO: Log event.
 
             ip_list = get_devices_ip(
-                nari_devices=nari_settings.get('devices'),
+                naari_devices=naari_settings.get('devices'),
                 get_inactive=False
             )
             cach_data = poll_all_devices(device_address_list= ip_list)

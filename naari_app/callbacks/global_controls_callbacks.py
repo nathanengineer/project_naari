@@ -9,8 +9,8 @@ from dash import Input, Output, State, ALL, ctx
 from dash.exceptions import PreventUpdate
 
 
-from nari_app.util.send_payload import  send_payload
-from nari_app.util.util_functions import is_app_loaded, get_master_device
+from naari_app.util.send_payload import  send_payload
+from naari_app.util.util_functions import is_app_loaded, get_master_device
 
 
 BUTTON_INDICATOR = {
@@ -37,11 +37,11 @@ def global_controls_callback(app):
         Input('room-theme-mode', 'value'),
         [
             State({'type': 'preset_selection', 'device_id': ALL}, 'options'),
-            State('nari_settings', 'data'),
+            State('naari_settings', 'data'),
             State('elements_initialized', 'data')
         ],
     )
-    def mode_change(selected_theme_id, _preset_options, nari_settings, elements_initialized):
+    def mode_change(selected_theme_id, _preset_options, naari_settings, elements_initialized):
         """
             When the room theme changes, enable auto mode and set each device's preset dropdown
             to the theme-defined preset. Returns [True, <list of preset names aligned to UI order>].
@@ -54,7 +54,7 @@ def global_controls_callback(app):
         if elements_initialized is False:
             raise PreventUpdate
 
-        themes = nari_settings.get('themes', [])
+        themes = naari_settings.get('themes', [])
         theme = next((theme for theme in themes if theme.get('id') == int(selected_theme_id)), None)
         if not theme:
             raise PreventUpdate
@@ -85,12 +85,12 @@ def global_controls_callback(app):
         Input('master-power-btn', 'n_clicks'),
         [
             State("device_catch_data", 'data'),
-            State('nari_settings', 'data'),
+            State('naari_settings', 'data'),
             State("elements_initialized", 'data')
         ]
     )
     @is_app_loaded()
-    def master_power_button(_, polled_devices, nari_settings, elements_initialized):    # pylint: disable=too-many-return-statements
+    def master_power_button(_, polled_devices, naari_settings, elements_initialized):    # pylint: disable=too-many-return-statements
         """
             Handle clicks on the Master Power button.
 
@@ -102,7 +102,7 @@ def global_controls_callback(app):
         if elements_initialized is False or not ctx.triggered_id:
             raise PreventUpdate
 
-        master_device = get_master_device(nari_settings.get('devices'))
+        master_device = get_master_device(naari_settings.get('devices'))
         if not master_device:
             return 'danger'  # TODO: Work on pupop window for this error.
 

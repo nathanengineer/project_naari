@@ -12,9 +12,9 @@ configuration interface — no live device commands are issued.
 import dash.exceptions
 from dash import Input, Output, State, html, ALL, ctx, MATCH
 
-from nari_app.callbacks.status_callbacks import device_preset_list
-from nari_app.modals.theme_settings_tab import theme_card
-from nari_app.util.config_builder import NariSettingsConfig
+from naari_app.callbacks.status_callbacks import device_preset_list
+from naari_app.modals.theme_settings_tab import theme_card
+from naari_app.util.config_builder import NaariSettingsConfig
 
 
 # TODO: move this into master call class?
@@ -42,10 +42,10 @@ def theme_settings_callback(app):
         Input({'type': 'theme_card_collapse_button', 'theme_id': ALL}, 'n_clicks'),
         [
             State('devices_catch_presets', 'data'),
-            State('nari_settings', 'data')
+            State('naari_settings', 'data')
         ]
     )
-    def theme_device_preset_viewable(pressed_collapse_buttons_value, cach_devices_preset, nari_settings):
+    def theme_device_preset_viewable(pressed_collapse_buttons_value, cach_devices_preset, naari_settings):
         """ Toggle theme card collapses and populate per‑device preset dropdowns for each theme. """
         if not ctx.triggered:
             raise dash.exceptions.PreventUpdate
@@ -55,7 +55,7 @@ def theme_settings_callback(app):
 
         collapse_clicks_mapping = {element['id']['theme_id']: element['value'] for element in widget_layout}
 
-        current_config_devices_list = [device['id'] for device in nari_settings['devices']]
+        current_config_devices_list = [device['id'] for device in naari_settings['devices']]
 
         device_current_presets_mapping = {preset_set['device_id']: device_preset_list(preset_set) for preset_set in cach_devices_preset if preset_set['device_id'] in current_config_devices_list}
 
@@ -71,7 +71,7 @@ def theme_settings_callback(app):
             for presets in device_presets.values()
         ]
 
-        dropdown_values_mapping = compute_dropdown_values_mapping(dropdown_options_mapping, nari_settings)
+        dropdown_values_mapping = compute_dropdown_values_mapping(dropdown_options_mapping, naari_settings)
 
         # Flatten values to mirror the same theme/device order used for options:
         dropdown_values = [
@@ -110,10 +110,10 @@ def theme_settings_callback(app):
             State('theme_cards_stack', 'children'),
             # Doesn't matter what to use as long as it has 'theme_id'
             Input({'type': 'theme_delete', 'theme_id': ALL}, 'id'),
-            State('nari_settings', 'data'),
+            State('naari_settings', 'data'),
         ],
     )
-    def add_remove_theme_card(add_mode_click, remove_mode_clicks, current_children_set, removed_widgets, nari_settings):
+    def add_remove_theme_card(add_mode_click, remove_mode_clicks, current_children_set, removed_widgets, naari_settings):
         """Add a new theme card or remove an existing one in the Theme Settings stack."""
         if not ctx.triggered:
             raise dash.exceptions.PreventUpdate
@@ -130,7 +130,7 @@ def theme_settings_callback(app):
                     'device_address': device['address'],
                     'preset_name': ""
                 }
-                for device in nari_settings['devices']
+                for device in naari_settings['devices']
             ]
 
             new_theme = {
@@ -141,7 +141,7 @@ def theme_settings_callback(app):
 
             new_card = theme_card(
                 theme_info=new_theme,
-                devices=nari_settings['devices'],
+                devices=naari_settings['devices'],
                 readonly=True,
                 init_load=False
             )
@@ -170,12 +170,12 @@ def theme_settings_callback(app):
 
 #-------------------------------------Helper Functions----------------------------------------------#
 
-def compute_dropdown_values_mapping(dropdown_options_mapping: dict, nari_settings: NariSettingsConfig) -> dict[int, dict[int, str]]:
+def compute_dropdown_values_mapping(dropdown_options_mapping: dict, naari_settings: NaariSettingsConfig) -> dict[int, dict[int, str]]:
     """theme_id -> { device_id -> selected_value } with config as source of truth."""
     # Note: Saved presets values from config file.
     saved = {
         (theme['id'], preset['device_id']): preset['preset_name']
-        for theme in nari_settings.get('themes', [])
+        for theme in naari_settings.get('themes', [])
         for preset in theme.get('presets', [])
     }
 

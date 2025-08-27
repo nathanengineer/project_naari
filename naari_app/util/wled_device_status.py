@@ -3,7 +3,7 @@ import json
 from typing import Any, Iterable, Optional
 from threading import Lock
 
-from nari_app.util.util_functions import nari_config_load, get_devices_ip
+from naari_app.util.util_functions import naari_config_load, get_devices_ip
 
 # Adds lock onto App polling events, preventing an accidental flooding of calls
 _POLL_LOCK = Lock()
@@ -16,7 +16,7 @@ RETRIES = 2
 RETRY_BACKOFF = 0.25        # slows down retry in seconds
 
 # For Initial Load, and use during Testing
-DEVICES_LOADED = nari_config_load()
+DEVICES_LOADED = naari_config_load()
 DEVICEs_IP = [info['address'] for info in DEVICES_LOADED['devices']]
 
 

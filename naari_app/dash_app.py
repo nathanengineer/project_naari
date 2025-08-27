@@ -20,28 +20,28 @@ from dash import Dash, html, dcc, Output, Input, State
 import dash_bootstrap_components as dbc
 
 
-#------------------------- NARI Dependencies ---------------------------------------------#
-from nari_app.util.util_functions import nari_config_load, device_polled_data_mapping
+#------------------------- NAARI Dependencies ---------------------------------------------#
+from naari_app.util.util_functions import naari_config_load, device_polled_data_mapping
 
-from nari_app.util.initial_load import get_initial_load
-from nari_app.ui_parts.navbar import navbar
-from nari_app.ui_parts.sidebar import sidebar
-from nari_app.ui_parts.main_content import main_content
-from nari_app.ui_parts.popups import refresh_popup
+from naari_app.util.initial_load import get_initial_load
+from naari_app.ui_parts.navbar import navbar
+from naari_app.ui_parts.sidebar import sidebar
+from naari_app.ui_parts.main_content import main_content
+from naari_app.ui_parts.popups import refresh_popup
 
-from nari_app.modals.config_modal import config_modal
+from naari_app.modals.config_modal import config_modal
 
 
-from nari_app.callbacks.startup_callbacks import startup_callbacks
-from nari_app.callbacks.ui_refresh_callbacks import layout_refresh_callbacks
-from nari_app.callbacks.status_callbacks import status_callbacks
-from nari_app.callbacks.device_controls_callbacks import device_controls_callbacks
-from nari_app.callbacks.global_controls_callbacks import global_controls_callback
-from nari_app.callbacks.content_callback import main_content_callback
-from nari_app.callbacks.config_callbacks import config_callbacks
-from nari_app.callbacks.theme_settings_callback import theme_settings_callback
-from nari_app.callbacks.device_settings_callback import device_settings_callback
-from nari_app.callbacks.general_settings_callback import general_settings_callback
+from naari_app.callbacks.startup_callbacks import startup_callbacks
+from naari_app.callbacks.ui_refresh_callbacks import layout_refresh_callbacks
+from naari_app.callbacks.status_callbacks import status_callbacks
+from naari_app.callbacks.device_controls_callbacks import device_controls_callbacks
+from naari_app.callbacks.global_controls_callbacks import global_controls_callback
+from naari_app.callbacks.content_callback import main_content_callback
+from naari_app.callbacks.config_callbacks import config_callbacks
+from naari_app.callbacks.theme_settings_callback import theme_settings_callback
+from naari_app.callbacks.device_settings_callback import device_settings_callback
+from naari_app.callbacks.general_settings_callback import general_settings_callback
 
 
 
@@ -70,10 +70,10 @@ def app_layout():
         A Dash Bootstrap Container containing the entire app layout.
     """
 
-    nari_settings = nari_config_load()
+    naari_settings = naari_config_load()
 
     # Initial poll fetch
-    polled_devices, polled_presets = get_initial_load(nari_devices=nari_settings.get('devices'))
+    polled_devices, polled_presets = get_initial_load(naari_devices=naari_settings.get('devices'))
 
     # Intentional pause to let devices settle before regular polling starts.
     # (Keeps first render consistent with initial poll results.)
@@ -83,11 +83,11 @@ def app_layout():
     # Adds device_id to the polled data
     polled_devices = device_polled_data_mapping(
         cach_data=polled_devices,
-        devices=nari_settings.get('devices')
+        devices=naari_settings.get('devices')
     )
     polled_presets = device_polled_data_mapping(
         cach_data=polled_presets,
-        devices=nari_settings.get('devices')
+        devices=naari_settings.get('devices')
     )
 
     return dbc.Container(
@@ -98,10 +98,10 @@ def app_layout():
                 children=[
                     dcc.Location(id='url', refresh=False),
                     # converting interval from sec -> ms
-                    dcc.Interval(id='poll-interval', interval=(nari_settings['ui_settings']['polling_rate']['value'] * 1000), n_intervals=0, disabled=True),
+                    dcc.Interval(id='poll-interval', interval=(naari_settings['ui_settings']['polling_rate']['value'] * 1000), n_intervals=0, disabled=True),
 
                     # Hidden stores (default shapes matter for downstream callbacks)
-                    dcc.Store(id='nari_settings', data=nari_settings, storage_type='session'),
+                    dcc.Store(id='naari_settings', data=naari_settings, storage_type='session'),
                     dcc.Store(id ='initial_device_catch_data', data=polled_devices, storage_type='session'),
                     dcc.Store(id='device_catch_data', data=None, storage_type='session'),
                     dcc.Store(id='devices_catch_presets', data=polled_presets, storage_type='session'),
@@ -118,7 +118,7 @@ def app_layout():
             ),
             html.Div(
                 id='config_modal_container',
-                children=config_modal(nari_settings)
+                children=config_modal(naari_settings)
             ),
             html.Div(navbar()),
             dbc.Row(children=[
@@ -126,7 +126,7 @@ def app_layout():
                     id='app_sidebar',
                     xs=12,
                     md=3,
-                    children= sidebar(nari_settings.get('themes'))
+                    children= sidebar(naari_settings.get('themes'))
                 ),
                 dbc.Col(
                     id='app_main_content',

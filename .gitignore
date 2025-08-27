@@ -2,11 +2,11 @@
 __pycache__
 .vscode
 .idea
-nari_app/callbacks/side_nav_callback.py
-nari_app/app_ids.py
+naari_app/callbacks/side_nav_callback.py
+naari_app/app_ids.py
 .env
 data.json
-nari_config.json
+naari_config.json
 nari_config - backup.json
 presets.json
 save_code.py

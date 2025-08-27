@@ -9,13 +9,13 @@ from functools import wraps
 from dash import ctx as callback_context
 from dash.exceptions import PreventUpdate
 
-from nari_app.util.config_builder import DeviceConfig
+from naari_app.util.config_builder import DeviceConfig
 
 FuncParms = ParamSpec("FuncParms")
 FuncReturn = ParamSpec("FuncReturn")
 
 MAINDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-CONFIG_PATH = os.path.join(MAINDIR, "nari_config.json")
+CONFIG_PATH = os.path.join(MAINDIR, "naari_config.json")
 
 def is_app_loaded() -> Callable[[Callable[FuncParms, FuncReturn]], Callable[FuncParms, FuncReturn]]:
     """
@@ -44,7 +44,7 @@ def function_time(func: Callable[FuncParms, FuncReturn]) -> Callable[FuncParms, 
     return wrapper
 
 
-def nari_config_load(file_path: str = CONFIG_PATH):
+def naari_config_load(file_path: str = CONFIG_PATH):
     """
     Load and return the device configuration from JSON.
 
@@ -100,14 +100,14 @@ def save_configer(config: dict, file_path: str = CONFIG_PATH):
         raise
 
 # TODO: make decorator?
-def get_devices_ip(nari_devices: list[DeviceConfig], get_inactive: bool = True) -> list[str]:
+def get_devices_ip(naari_devices: list[DeviceConfig], get_inactive: bool = True) -> list[str]:
     """ Extract a list of device IP addresses from config settings dict """
-    if not nari_devices or not isinstance(nari_devices, list):
-        nari_devices = nari_config_load().get('devices')
+    if not naari_devices or not isinstance(naari_devices, list):
+        naari_devices = naari_config_load().get('devices')
 
     if get_inactive:
-        return [ device['address'] for device in nari_devices ]
-    return [ device['address'] for device in nari_devices if device['active'] ]
+        return [device['address'] for device in naari_devices]
+    return [device['address'] for device in naari_devices if device['active']]
 
 
 def get_device(devices: list[DeviceConfig], device_id: int) -> DeviceConfig | None:

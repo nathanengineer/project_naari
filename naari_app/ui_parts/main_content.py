@@ -3,7 +3,7 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 
-from nari_app.util.config_builder import DeviceConfig
+from naari_app.util.config_builder import DeviceConfig
 
 # Notes for color usage:
 # - Primary   -> Active / Working
@@ -150,7 +150,7 @@ def device_card(device: DeviceConfig) -> dbc.Card:
     )
 
 
-def main_content(nari_system_devices: list[DeviceConfig]) -> dbc.Container:
+def main_content(naari_system_devices: list[DeviceConfig]) -> dbc.Container:
     """ Assemble the main content: one card per device (layout only; data via callbacks). """
     return dbc.Container(
         id ='main_content_container',
@@ -162,7 +162,7 @@ def main_content(nari_system_devices: list[DeviceConfig]) -> dbc.Container:
                 class_name='',
                 gap=4,
                 children=[
-                    *[ device_card(device) for device in nari_system_devices if device.get('active', False) ]
+                    *[device_card(device) for device in naari_system_devices if device.get('active', False)]
                 ]
             )
         ]

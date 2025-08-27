@@ -3,7 +3,7 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
-from nari_app.util.config_builder import DeviceConfig, ThemeSelectionConfig, DevicePreset
+from naari_app.util.config_builder import DeviceConfig, ThemeSelectionConfig, DevicePreset
 
 __all__ = [
     'theme_card',

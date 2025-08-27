@@ -10,8 +10,8 @@ when canceling or closing the modal.
 from dash.exceptions import PreventUpdate
 from dash import Input, Output, State, ALL, ctx
 
-from nari_app.util.util_functions import save_configer
-from nari_app.util.config_builder import DeviceConfig, UISettings, ThemeSelectionConfig, NariSettingsConfig
+from naari_app.util.util_functions import save_configer
+from naari_app.util.config_builder import DeviceConfig, UISettings, ThemeSelectionConfig, NaariSettingsConfig
 
 
 def config_callbacks(app):
@@ -20,7 +20,7 @@ def config_callbacks(app):
 
         Includes:
             - Opening and closing the modal via config/save/cancel buttons
-            - Saving all tab-based settings into the nari_settings store
+            - Saving all tab-based settings into the naari_settings store
             - Resetting stack state and button counters when modal is reopened
 
         Future adjustments may expand cancel behavior to fully revert
@@ -89,7 +89,7 @@ def config_callbacks(app):
 
 
     @app.callback(
-        Output("nari_settings", "data", allow_duplicate=True),
+        Output("naari_settings", "data", allow_duplicate=True),
         Input("config_save_button", "n_clicks"),
         [
             # Devices tab
@@ -107,11 +107,11 @@ def config_callbacks(app):
             State({"type": "general_settings_row_meta", "name": ALL}, "data"),
 
             # Existing config (optional, fallback)
-            State("nari_settings", "data"),
+            State("naari_settings", "data"),
         ]
     )
     def save_config( n_clicks, device_instance_names, device_addresses, device_master_syncs, device_actives, theme_names,   # pylint: disable=too-many-arguments, too-many-positional-arguments
-                     theme_preset_values, ui_setting_values, ui_setting_metas, existing_config) -> NariSettingsConfig:
+                     theme_preset_values, ui_setting_values, ui_setting_metas, existing_config) -> NaariSettingsConfig:
         """ Handles the saving and updating of the Config file of current settings. """
 
         if not n_clicks:

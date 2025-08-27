@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 import requests
 
-from nari_app.util.config_builder import DeviceConfig, UISettings
+from naari_app.util.config_builder import DeviceConfig, UISettings
 
 __all__ =[
     'send_device_power_update',
