@@ -4,12 +4,15 @@
 
 N.A.A.R.I is not yet a fully deployable standalone web application. It currently runs in Dash development mode. Features are functional but under testing, and bugs are still being worked out.  
 User discretion advised, N.A.A.R.I has warned you. 🤖
+<br><br>
 
 ## Why N.A.A.R.I?
 
 Managing multiple WLED devices normally requires adjusting each one individually or enabling WLED Sync. Neither option provides a true one stop solution. WLED Sync forces all devices to follow the same command, the same preset, brightness, or color, with no room for variety. You cannot dim one device without dimming them all, or set different presets across the room. Once you add three or more devices, it quickly becomes a pain to change each one manually every time you want to match a theme or mood.
 
 I designed and built Project **N.A.A.R.I**, a Python-based Dash application that funnels multiple WLED devices into a single, simplified control panel. It provides a global view, individual device flexibility, and a foundation that can scale beyond WLED in the future.
+<br><br>
+
 
 ## Features
 
@@ -44,6 +47,8 @@ I designed and built Project **N.A.A.R.I**, a Python-based Dash application that
 - Voice commands (long-term goal)
 
 - Generative AI assistant responses (long-term goal)
+<br><br>
+
 
 ## Usage
 
@@ -60,6 +65,14 @@ I designed and built Project **N.A.A.R.I**, a Python-based Dash application that
 📖 A Wiki Manual is in progress to document the full UI, features, buttons, and expectations. In it will include screenshots and explanations. 
 
 
+### Main Page Example:
+<img width="1148" height="837" alt="Image" src="https://github.com/user-attachments/assets/054da935-2850-4d9b-b05e-62f0e07d03eb" />
+
+### Configuration WIndow:
+<img width="1148" height="1158" alt="Image" src="https://github.com/user-attachments/assets/825ff140-cc72-4bdb-ae9c-8ae9b923810c" />
+<br><br>
+
+
 ## Requirements
 
 Core: Python and Dash
@@ -69,6 +82,7 @@ Environment: Dash currently runs in development mode, server deployment coming s
 Devices: Any WLED-compatible controller including MAGWLED, QuinLED, GLEDOPTO ESP32, or DIY ESP32 builds
 
 Compatibility: Works with WLED v0.15.1 and expected to support future versions that maintain JSON API commands
+<br><br>
 
 
 ## Installation and Setup
@@ -88,12 +102,15 @@ Remember to configure an .env file from .env_example.
 
 Launch app: dev_naari_launcher.cmd
 Open your prowser at http://127.0.0.1:{.env PORT}
+<br><br>
 
 
 ## Contribution Guidelines
 
 Contributions are welcome, but please open an issue or discussion first. Just reach out first 
 I am open to new ideas and visions, but N.A.A.R.I has a clear vision in mind and contributions should align with it.
+<br><br>
+
 
 ## License
 
