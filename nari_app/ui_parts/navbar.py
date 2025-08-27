@@ -7,7 +7,7 @@ def navbar() -> dbc.Navbar:
         class_name="px-3",   # small horizontal padding
         children=[
             # Left: Brand
-            dbc.NavbarBrand("N.A.R.I Control Panel", class_name="ms-1"),
+            dbc.NavbarBrand("N.A.A.R.I Control Panel", class_name="ms-1"),
 
             # Right: room for controls (theme toggle, etc.)
             dbc.Nav(
