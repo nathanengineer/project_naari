@@ -66,7 +66,7 @@ def config_modal(config_settings: NariSettingsConfig) -> dbc.Modal:
         is_open=False,
         size='lg',
         children=[
-            dbc.ModalHeader(dbc.ModalTitle("N.A.R.I Configer"), close_button=False),
+            dbc.ModalHeader(dbc.ModalTitle("N.A.A.R.I Configer"), close_button=False),
             dbc.ModalBody([
                 dbc.Tabs([
                     _theme_tab(config_settings),
