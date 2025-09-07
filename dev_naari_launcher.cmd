@@ -1,3 +1,3 @@
 @echo off
-.\.venv\Scripts\python .\nari_app\dash_app.py
+.\.venv\Scripts\python .\naari_app\dash_app.py
 pause
