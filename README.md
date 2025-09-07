@@ -36,8 +36,6 @@ I designed and built Project **N.A.A.R.I**, a Python-based Dash application that
 
 ### 🚧 Current Planned / Roadmap
 
-- Internal logging and log manager
-
 - Server deployment for homelabs, Raspberry Pi, or similar setups
 
 - Device info panel for real-time status of active devices (maybe)
