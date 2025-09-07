@@ -29,7 +29,8 @@ def layout_refresh_callbacks(app):
         [
             Output('room-theme-mode', 'options'),
             Output('app_main_content', 'children'),
-            Output('config_modal_container', 'children')
+            Output('config_modal_container', 'children'),
+            Output('init_brightness_chain_trigger', 'data')
         ],
         Input('naari_settings', 'data'),
     )
@@ -40,4 +41,4 @@ def layout_refresh_callbacks(app):
         themes = naari_settings.get('themes', [])
         theme_options = [{'label': theme['name'], 'value': theme['id']} for theme in themes]
 
-        return theme_options, main_content(naari_settings['devices']), config_modal(naari_settings)
+        return theme_options, main_content(naari_settings['devices']), config_modal(naari_settings), True

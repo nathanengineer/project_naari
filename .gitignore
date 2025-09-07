@@ -4,6 +4,7 @@ __pycache__
 .idea
 naari_app/callbacks/side_nav_callback.py
 naari_app/app_ids.py
+naari_logging/Logs
 .env
 data.json
 naari_config.json

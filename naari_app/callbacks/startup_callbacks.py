@@ -9,14 +9,22 @@ This includes the following functionalities:
 """
 
 from __future__ import annotations
-import time
 
+import logging
+import time
+import os
+
+from dotenv import load_dotenv
 from dash import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-
+from naari_logging.naari_logger import LogManager
 from naari_app.util.wled_device_status import poll_all_devices
 from naari_app.util.util_functions import get_devices_ip
+
+MAINDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ",,"))
+load_dotenv(os.path.join(MAINDIR, ".env"))
+TO_LOG = int(os.getenv("LOGGING", "0")) == 1
 
 
 def startup_callbacks(app):
@@ -30,7 +38,7 @@ def startup_callbacks(app):
 
     @app.callback(
         [
-            Output('poll-interval', 'disabled'),
+            Output('poll_interval', 'disabled'),
             Output('initial_device_catch_data', 'data'),
             Output('data_app_load_check', 'data')
         ],
@@ -47,7 +55,12 @@ def startup_callbacks(app):
             Enables poller only after cache looks valid.
         """
         if not naari_settings:
-            print("naari no go")
+            LogManager.print_message(
+                "Config File unable to load. Check system.",
+                to_log=TO_LOG,
+                log_level=logging.ERROR
+            )
+            # TODO: create popup error
             raise PreventUpdate
 
         cach_data = initial_cach_data
@@ -55,7 +68,11 @@ def startup_callbacks(app):
 
             if cach_data and all('data' in device for device in cach_data):
                 return False, cach_data, True
-            print("initial polling failed, extra polling")  # TODO: Log event.
+            LogManager.print_message(
+                "Initial polling failed. RE-polling devices",
+                to_log=TO_LOG,
+                log_level=logging.ERROR
+            )
 
             ip_list = get_devices_ip(
                 naari_devices=naari_settings.get('devices'),
@@ -65,4 +82,9 @@ def startup_callbacks(app):
             time.sleep(2)   # allows for time for async devices to load properly
 
         # TODO: pop up error needs to be done.
+        LogManager.print_message(
+            "Unable to get data from all devices",
+            to_log=TO_LOG,
+            log_level=logging.ERROR
+        )
         raise PreventUpdate

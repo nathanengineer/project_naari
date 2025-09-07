@@ -4,14 +4,21 @@ Handles global WLED control callbacks that apply system-wide.
 These callbacks issue POST commands that affect all devices or a designated group through global triggers like theme changes or master on/off switches.
 """
 
+import os
+import logging
+
+from dotenv import load_dotenv
 import dash.exceptions
 from dash import Input, Output, State, ALL, ctx
 from dash.exceptions import PreventUpdate
 
-
+from naari_logging.naari_logger import LogManager
 from naari_app.util.send_payload import  send_payload
-from naari_app.util.util_functions import is_app_loaded, get_master_device
+from naari_app.util.util_functions import get_master_device
 
+MAINDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ",,"))
+load_dotenv(os.path.join(MAINDIR, ".env"))
+TO_LOG = int(os.getenv("LOGGING", "0")) == 1
 
 BUTTON_INDICATOR = {
     True: "success",    #Onn
@@ -57,6 +64,12 @@ def global_controls_callback(app):
         themes = naari_settings.get('themes', [])
         theme = next((theme for theme in themes if theme.get('id') == int(selected_theme_id)), None)
         if not theme:
+            LogManager.print_message(
+                "Theme not in Config. Check Settings",
+                to_log=TO_LOG,
+                log_level=logging.WARNING
+            )
+            # TODO: Popup issue
             raise PreventUpdate
 
         presets_for_theme = theme.get('presets', [])
@@ -81,16 +94,20 @@ def global_controls_callback(app):
 
 
     @app.callback(
-        Output('master-power-btn', 'color'),
-        Input('master-power-btn', 'n_clicks'),
+        [
+            Output('master-power-btn', 'color'),
+            Output('reset_poll_interval', 'data')
+        ],
+        [
+            Input('master-power-btn', 'n_clicks'),
+            Input('initial_device_catch_data', 'data')      # Aids in initial color value.
+        ],
         [
             State("device_catch_data", 'data'),
             State('naari_settings', 'data'),
-            State("elements_initialized", 'data')
         ]
     )
-    @is_app_loaded()
-    def master_power_button(_, polled_devices, naari_settings, elements_initialized):    # pylint: disable=too-many-return-statements
+    def master_power_button(_button_click, _initial_load, polled_devices, naari_settings):    # pylint: disable=too-many-return-statements
         """
             Handle clicks on the Master Power button.
 
@@ -99,23 +116,24 @@ def global_controls_callback(app):
             - Sends a payload to toggle power on click
             - Returns a color representing current/failed state
         """
-        if elements_initialized is False or not ctx.triggered_id:
+        if not ctx.triggered_id:
             raise PreventUpdate
 
         master_device = get_master_device(naari_settings.get('devices'))
         if not master_device:
-            return 'danger'  # TODO: Work on pupop window for this error.
+            return 'danger', False  # TODO: Work on pupop window for this error.
 
         udpn_enabled = next((device.get('data', None).get('state').get('udpn').get('send') for device in polled_devices if device['ip'] == master_device['address']), None)
         if udpn_enabled is None:
-            return 'danger'  # TODO: need popup window for this error.
+            return 'danger', False  # TODO: need popup window for this error.
 
         is_power_on = next((device['data']['state']["on"] for device in polled_devices if device['ip'] == master_device['address']))
 
+        # Initial button color value
         if not ctx.triggered_id == 'master-power-btn':
             if is_power_on:
-                return "primary"  # Devices On
-            return 'secondary'  # Devices Off
+                return "primary", False  # Devices On
+            return 'secondary', False  # Devices Off
 
         # Toggle target power state
         # Not using API function call because intent is to use Master Sync device
@@ -123,9 +141,9 @@ def global_controls_callback(app):
         power_payload = {"on": system_power_on}
         api_response = send_payload(master_device["address"], power_payload)
 
-        if api_response.status_code == 200 and is_power_on:     # pylint: disable=no-else-return
-            return 'primary'  # Devices On
-        elif api_response.status_code == 200 and not is_power_on:
-            return 'secondary'  # Devices Off
+        if api_response.status_code == 200 and is_power_on:     # Devices Off   pylint: disable=no-else-return
+            return 'secondary', True
+        elif api_response.status_code == 200 and not is_power_on:   # Devices On
+            return 'primary', True
         else:
-            return 'danger'  # Issues on response
+            return 'danger', True  # Issues on response

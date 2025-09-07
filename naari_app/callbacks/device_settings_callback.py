@@ -12,7 +12,7 @@ device actions are performed here.
 import dash.exceptions
 from dash import html, Input, Output, State, ALL, ctx, MATCH
 
-from naari_app.modals.device_tab import device_card      # pylint: disable=import-error
+from naari_app.modals.device_tab import device_card
 
 # TODO: move this into master call class?
 COLLAPSE_OPEN_SYMBOL = html.I(className="bi bi-caret-left-fill fs-5")

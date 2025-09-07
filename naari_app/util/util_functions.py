@@ -1,14 +1,16 @@
 """ Modular contains the necessary functions for poll/GET specific info of devices using JSON/API calls. """
-
+import logging
 import time
 import json
 import os
 from typing import Callable, ParamSpec
 from functools import wraps
 
+from dotenv import load_dotenv
 from dash import ctx as callback_context
 from dash.exceptions import PreventUpdate
 
+from naari_logging.naari_logger import LogManager
 from naari_app.util.config_builder import DeviceConfig
 
 FuncParms = ParamSpec("FuncParms")
@@ -16,6 +18,9 @@ FuncReturn = ParamSpec("FuncReturn")
 
 MAINDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CONFIG_PATH = os.path.join(MAINDIR, "naari_config.json")
+
+load_dotenv(os.path.join(MAINDIR, ".env"))
+TO_LOG = int(os.getenv("LOGGING", "0")) == 1
 
 def is_app_loaded() -> Callable[[Callable[FuncParms, FuncReturn]], Callable[FuncParms, FuncReturn]]:
     """
@@ -63,12 +68,21 @@ def naari_config_load(file_path: str = CONFIG_PATH):
         with open(file_path, 'r', encoding='utf-8') as file:
             config_file = json.load(file)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        # TODO: Replace with equivalent Logger
-        print(f"[device_load] Failed to load config from {file_path}: {e}") # Temporary
+        LogManager.print_message(
+            "[device_load] Failed to load config from %s: %s",
+            file_path, e,
+            to_log=TO_LOG,
+            log_level=logging.ERROR
+        )
         raise
 
     if not config_file:
-        print(f"[device_load] Config file {file_path} is empty.")  # temporary
+        LogManager.print_message(
+            "[device_load] Config file %s is empty.",
+            file_path,
+            to_log=TO_LOG,
+            log_level=logging.ERROR
+        )
         raise ValueError(f"Config file {CONFIG_PATH} is empty")
 
     return config_file
@@ -87,19 +101,27 @@ def save_configer(config: dict, file_path: str = CONFIG_PATH):
            OSError: If the file cannot be written.
        """
     if not config:
-        # TODO: Replace with equivalent Logger
-        print(f"[save_configer] Attempted to save empty config to {file_path}")  # temporary
+        LogManager.print_message(
+            "[save_configer] Attempted to save empty config to %s",
+            file_path,
+            to_log=TO_LOG,
+            log_level=logging.ERROR
+        )
         raise ValueError(f"Attempted to save empty config to {file_path}")
 
     try:
         with open(file_path, "w", encoding="utf-8") as cfile:
             json.dump(config, cfile, indent=4, ensure_ascii=False)
     except OSError as e:
-        # TODO: Replace with equivalent Logger
-        print(f"[save_configer] Failed to save config to {file_path}: {e}")  # temporary
-        raise
+        LogManager.print_message(
+            "[save_configer] Failed to save config to %s: %s",
+            file_path, e,
+            to_log=TO_LOG,
+            log_level=logging.ERROR
+        )
+        raise OSError from e
 
-# TODO: make decorator?
+
 def get_devices_ip(naari_devices: list[DeviceConfig], get_inactive: bool = True) -> list[str]:
     """ Extract a list of device IP addresses from config settings dict """
     if not naari_devices or not isinstance(naari_devices, list):
@@ -111,9 +133,12 @@ def get_devices_ip(naari_devices: list[DeviceConfig], get_inactive: bool = True)
 
 
 def get_device(devices: list[DeviceConfig], device_id: int) -> DeviceConfig | None:
+    """ Takes list of devices in config file and returns config info based on device_id. """
     return next((device for device in devices if device['id'] == device_id), None)
 
+
 def is_device_active(device_id: int, devices: list[DeviceConfig]) -> bool:
+    """ Determines if provided device_id is active. """
     return next((device['active'] for device in devices if device['id'] == device_id), False )
 
 
@@ -125,6 +150,7 @@ def device_polled_data_mapping(cach_data: list[dict], devices: list[DeviceConfig
         if device_preset['ip'] in devices:
             device_preset['device_id'] = devices[device_preset['ip']]  # adds device ID key into polled device presets
     return cach_data
+
 
 def get_master_device(devices: list[DeviceConfig]):
     """Return the (single) master device or None if not found."""
