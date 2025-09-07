@@ -6,9 +6,9 @@ Main Dash app bootstrap for the WLED Controller.
 - Registers callback groups (status, content, config, modes, page-load).
 
 """
-# TODO: Logger needs to be added
-
 from __future__ import annotations
+
+import logging
 import time
 import os
 import sys
@@ -21,12 +21,15 @@ import dash_bootstrap_components as dbc
 
 
 #------------------------- NAARI Dependencies ---------------------------------------------#
+from naari_logging.naari_logger import LogManager
+logger = LogManager()
+logger.setup_file_logging()
+
 from naari_app.util.util_functions import naari_config_load, device_polled_data_mapping
 
 from naari_app.util.initial_load import get_initial_load
 from naari_app.ui_parts.navbar import navbar
 from naari_app.ui_parts.sidebar import sidebar
-from naari_app.ui_parts.main_content import main_content
 from naari_app.ui_parts.popups import refresh_popup
 
 from naari_app.modals.config_modal import config_modal
@@ -53,10 +56,7 @@ HOST = os.getenv("HOST")
 PORT = int(os.getenv("PORT"))
 DEBUG = os.getenv("DEBUG") == "1"
 RELOADER = os.getenv("USE_RELOADER") == "1"  # keep off while debugging async
-
-# Small, readable constants (no behavior change)
-POLL_INTERVAL = 3
-MASTER_RESYNC_DELAY_S = 1  # documented in payload sender; noted here for cross-ref
+TO_LOG = int(os.getenv("LOGGING", "0")) == 1
 
 def app_layout():
     """
@@ -98,7 +98,8 @@ def app_layout():
                 children=[
                     dcc.Location(id='url', refresh=False),
                     # converting interval from sec -> ms
-                    dcc.Interval(id='poll-interval', interval=(naari_settings['ui_settings']['polling_rate']['value'] * 1000), n_intervals=0, disabled=True),
+                    dcc.Interval(id='poll_interval', interval=(naari_settings['ui_settings']['polling_rate']['value'] * 1000), n_intervals=0, disabled=True),
+                    dcc.Store("reset_poll_interval", data=False, storage_type='session'),
 
                     # Hidden stores (default shapes matter for downstream callbacks)
                     dcc.Store(id='naari_settings', data=naari_settings, storage_type='session'),
@@ -109,7 +110,8 @@ def app_layout():
                     # For Initial Calls, Chains, and preventions
                     dcc.Store(id='elements_initialized', data=None, storage_type='session'),
                     dcc.Store(id='data_app_load_check', data=False, storage_type='session'),
-                    dcc.Store(id='brightness_chain_trigger', data=None, storage_type='session'),
+                    dcc.Store(id='init_brightness_chain_trigger', data=None, storage_type='session'),
+                    html.Div(id='brightness_chain_trigger', n_clicks=0),
 
                     dcc.Store(id='auto_mode', data=False),  # Initial_Auto_Mode
 
@@ -201,11 +203,18 @@ def dash_app():
 
     return app
 
-#def run_dash():
-
 
 if __name__ == '__main__':
-    the_app = dash_app()
-    # app.config.suppress_callback_exceptions = True
+    try:
+        the_app = dash_app()
 
-    the_app.run(debug=DEBUG, host=HOST, port=PORT, threaded=True, use_reloader=RELOADER)
+        the_app.run(debug=DEBUG, host=HOST, port=PORT, threaded=True, use_reloader=RELOADER)
+    except Exception as err:        # pylint: disable=broad-exception-caught
+        logger.print_message(
+            "Major problem during run >> %s",
+            err,
+            to_log=TO_LOG,
+            log_level=logging.CRITICAL
+        )
+    finally:
+        logger.shutdown()

@@ -9,16 +9,24 @@ actions that affect the entire system.
 """
 
 from concurrent.futures import ThreadPoolExecutor
+import os
+import logging
 
+from dotenv import load_dotenv
 import dash.exceptions
 from dash import Input, Output, State, ALL, ctx
 from dash.exceptions import PreventUpdate
 
+from naari_logging.naari_logger import LogManager
 from naari_app.util.config_builder import DeviceConfig, UISettings
 from naari_app.util.send_payload import  send_preset, brightness_adjustment, PayloadRetryError
 from naari_app.util.util_functions import get_device
 
 __all__ = ['device_controls_callbacks']
+
+MAINDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ",,"))
+load_dotenv(os.path.join(MAINDIR, ".env"))
+TO_LOG = int(os.getenv("LOGGING", "0")) == 1
 
 
 def device_controls_callbacks(app):     # pylint: disable=too-many-statements
@@ -37,10 +45,8 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
     @app.callback(
         Output({'type': "brightness_slider", 'device_id': ALL}, "value"),
         [
-            Input('brightness_chain_trigger', 'data'),
+            Input('brightness_chain_trigger', 'n_clicks'),
             Input({'type': 'preset_selection', 'device_id': ALL}, 'value'),
-            # TODO: Try to remember why I have this as a trigger.
-            # Input('refresh_button', 'n_clicks')
         ],
         [
             State('auto_mode', 'data'),
@@ -49,7 +55,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
             State('naari_settings', 'data'),
         ]
     )
-    def brightness_preset_setter(_brightness_chain_trigger, preset_option, is_auto_mode, polled_cach_data,      #pylint: disable=too-many-locals, too-many-branches
+    def brightness_preset_setter(brightness_chain_trigger, preset_option, is_auto_mode, polled_cach_data,      #pylint: disable=too-many-locals, too-many-branches, too-many-arguments, too-many-positional-arguments
                                  cached_presets, naari_settings):
         """
             The selected preset will perform the following actions
@@ -62,12 +68,17 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
         # Build baseline: device_id -> current brightness from polled data
         try:
             devices_brightness = {
-                device['device_id']: device.get('data', {}).get('state', {}).get('bri', 0)
+                device['device_id']: device.get('data', 0).get('state', {}).get('bri', 0)
                 for device in polled_cach_data
             }
         except TypeError:
             # polled_device data has an issue or malformed
-            raise PreventUpdate
+            LogManager.print_message(
+                "Brightness setter issue. polled_device data has an issue or malformed",
+                to_log=TO_LOG,
+                log_level=logging.ERROR
+            )
+            raise PreventUpdate     # pylint: disable=raise-missing-from
 
         # Use the UI-rendered order for preset dropdowns to map ids -> values robustly
         # inputs_list[1] corresponds to the second Input group: preset_selection 'value'
@@ -144,13 +155,14 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
         [
             Output('auto_mode', 'data', allow_duplicate=True),
             Output({'type': 'brightness_indicator', 'device_id': ALL}, 'children'),
-            Output('brightness_chain_trigger', 'data', allow_duplicate=True)
+            Output('init_brightness_chain_trigger', 'data', allow_duplicate=True),
+            Output('reset_poll_interval', 'data', allow_duplicate=True)
         ],
         Input({'type': "brightness_slider", 'device_id': ALL}, "value"),
         [
             State('auto_mode', 'data'),
             State("naari_settings", 'data'),
-            State('brightness_chain_trigger', 'data')
+            State('init_brightness_chain_trigger', 'data')
         ],
         prevent_initial_call=True
     )
@@ -164,7 +176,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
 
         # Prevents turning devices on/off during initial page loading.
         if brightness_chain_trigger:
-            return False, list(brightness_values), False
+            return False, list(brightness_values), False, False
 
         # Only when manipulated manually by user
         if not auto_mode:
@@ -189,20 +201,27 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
                     )
                 except PayloadRetryError as err:
                     # TODO: add trigger indicating what device had an error?
-                    # TODO: swap to logger once wired
-                    print(
-                        f"Brightness update failed after {getattr(err, 'attempts', 'n/a')} attempts "
-                        f"({getattr(err, 'url', 'n/a')}): {getattr(err, 'last_exception', err)}"
+                    LogManager.print_message(
+                        "Brightness update failed after %s attempts (url=%s): %s",
+                        getattr(err, 'attempts', 'n/a'),
+                        getattr(err, 'url', 'n/a'),
+                        getattr(err, 'last_exception', err),
+                        to_log=TO_LOG,
+                        log_level=logging.ERROR
                     )
 
-                except Exception as exc:
-                    # TODO: logger.exception(...)
-                    print(f"Unexpected error updating device_id {target_device_id}: {exc}")
+                except Exception as exc:        # pylint: disable=broad-exception-caught
+                    # TODO: Make popup?
+                    LogManager.print_message(
+                        "Unexpected error updating device_id %s: %s",
+                        target_device_id, exc,
+                        to_log=TO_LOG,
+                        log_level=logging.ERROR
+                    )
 
-        return False, list(brightness_values), False
+        return False, list(brightness_values), False, True
 
 
-# TODO: Move helper functions to own modular?
 #----------------------------------- helper functions-----------------------#
 def _preset_sender(preset_value: int, target_device: DeviceConfig, ui_settings: UISettings):
     send_preset(

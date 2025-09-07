@@ -7,12 +7,20 @@ resets dynamic elements like card stacks and ensures proper state handling
 when canceling or closing the modal.
 """
 
+import os
+import logging
+
+from dotenv import load_dotenv
 from dash.exceptions import PreventUpdate
 from dash import Input, Output, State, ALL, ctx
 
+from naari_logging.naari_logger import LogManager
 from naari_app.util.util_functions import save_configer
 from naari_app.util.config_builder import DeviceConfig, UISettings, ThemeSelectionConfig, NaariSettingsConfig
 
+MAINDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ",,"))
+load_dotenv(os.path.join(MAINDIR, ".env"))
+TO_LOG = int(os.getenv("LOGGING", "0")) == 1
 
 def config_callbacks(app):
     """
@@ -32,7 +40,8 @@ def config_callbacks(app):
             Output('theme_add_button', 'n_clicks'),
             Output('theme_cards_stack', 'children', allow_duplicate=True),
             Output('device_add_button', 'n_clicks'),
-            Output('devices_stack', 'children', allow_duplicate=True)
+            Output('devices_stack', 'children', allow_duplicate=True),
+            Output('reset_poll_interval', 'data', allow_duplicate=True)
         ],
         [
             Input('config-btn', 'n_clicks'),
@@ -53,11 +62,11 @@ def config_callbacks(app):
 
         #if data_app_load_check and trigger_id == 'config-btn':
         if trigger_id == 'config-btn':                                                                          # pylint: disable=no-else-return
-            return True, 0, current_themes_children_set, 0, current_devices_children_set
+            return True, 0, current_themes_children_set, 0, current_devices_children_set, True
 
         #elif data_app_load_check and data_app_load_check and trigger_id == 'config_save_button':
         elif trigger_id == 'config_save_button':                                                                # pylint: disable=no-else-return
-            return False, 0, current_themes_children_set, 0, current_devices_children_set
+            return False, 0, current_themes_children_set, 0, current_devices_children_set, True
 
         #elif data_app_load_check and trigger_id == 'config_cancel_button':
         elif trigger_id == 'config_cancel_button':                                                              # pylint: disable=no-else-return
@@ -81,10 +90,15 @@ def config_callbacks(app):
                     continue  # Skip this card (i.e., remove it)
                 update_device_children.append(child)
 
-            return False, 0, updated_theme_children, 0, update_device_children
+            return False, 0, updated_theme_children, 0, update_device_children, True
 
         else:
-            print(f"open_model function trigger unknown: {trigger_id}")
+            LogManager.print_message(
+                "Open_model function trigger unknown: %s",
+                trigger_id,
+                to_log=TO_LOG,
+                log_level=logging.ERROR
+            )
             raise PreventUpdate
 
 
@@ -117,20 +131,35 @@ def config_callbacks(app):
         if not n_clicks:
             raise PreventUpdate
 
-        current_config = {
-            "devices": format_device_settings_export(callback_state=ctx.states_list),
-            "themes": format_theme_settings_export(callback_state=ctx.states_list),
-            "ui_settings": format_ui_settings_export(
-                callback_state=ctx.states_list,
-                existing_ui_settings=existing_config['ui_settings']
-                )
-        }
+        try:
+            current_config = {
+                "devices": format_device_settings_export(callback_state=ctx.states_list),
+                "themes": format_theme_settings_export(callback_state=ctx.states_list),
+                "ui_settings": format_ui_settings_export(
+                    callback_state=ctx.states_list,
+                    existing_ui_settings=existing_config['ui_settings']
+                    )
+            }
+        except Exception as err:
+            # TODO: Add in notification window?
+            LogManager.print_message(
+                "Building Config Dictionary issue: %s",
+                err,
+                to_log=TO_LOG,
+                log_level=logging.ERROR
+            )
+            raise PreventUpdate         # pylint: disable=raise-missing-from
 
-        save_configer(current_config)
+        try:
+            save_configer(current_config)
+        except OSError:
+            # TODO: Add in notification window?
+            raise PreventUpdate         # pylint: disable=raise-missing-from
 
         return current_config
 
 
+#---------------------- Helper Functions ---------------------------------------------------------#
 
 def format_device_settings_export(callback_state: list[list[dict]]) -> list[DeviceConfig]:
     """ Builds the Device settings output for the config file. """

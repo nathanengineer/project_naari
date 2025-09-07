@@ -2,8 +2,18 @@ import asyncio, httpx
 import json
 from typing import Any, Iterable, Optional
 from threading import Lock
+import os
+import logging
+import time
 
+from dotenv import load_dotenv
+
+from naari_logging.naari_logger import LogManager
 from naari_app.util.util_functions import naari_config_load, get_devices_ip
+
+MAINDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ",,"))
+load_dotenv(os.path.join(MAINDIR, ".env"))
+TO_LOG = int(os.getenv("LOGGING", 0)) == 1
 
 # Adds lock onto App polling events, preventing an accidental flooding of calls
 _POLL_LOCK = Lock()
@@ -18,6 +28,12 @@ RETRY_BACKOFF = 0.25        # slows down retry in seconds
 # For Initial Load, and use during Testing
 DEVICES_LOADED = naari_config_load()
 DEVICEs_IP = [info['address'] for info in DEVICES_LOADED['devices']]
+
+
+class PollingThreadLock(RuntimeError):
+    def __init__(self):
+        super().__init__("Polling Fail. Poling lock active")
+        time.sleep(1)   # giving it time for devices to catch up
 
 
 def _timeout() -> httpx.Timeout:
@@ -114,9 +130,7 @@ def poll_all_devices(device_address_list: Iterable[str] | None = None):
         device_address_list = get_devices_ip()
 
     if not _POLL_LOCK.acquire_lock(blocking=False):     # pylint: disable=no-member
-        # TODO: will need to log this
-        print("Skipping poll_all_devices — already running.")
-        return None
+        raise PollingThreadLock
 
     #async with lock:
     try:
@@ -127,7 +141,11 @@ def poll_all_devices(device_address_list: Iterable[str] | None = None):
 
 def poll_device_presets(device_address_list: Iterable[str] | None = None):
     if not device_address_list:
-        # TODO: add logging here for error
+        LogManager.print_message(
+            "No list of IP supplied. Possible Config or supplied error. Need to correct. Reading from file.",
+            to_log=TO_LOG,
+            log_level=logging.ERROR
+        )
         device_address_list = get_devices_ip()
     return asyncio.run(get_presets(device_address_list))
 

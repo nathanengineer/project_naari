@@ -2,16 +2,26 @@
 
 import time
 from typing import Any, Dict
+import os
+import logging
 
+from dotenv import load_dotenv
 import requests
 
+from naari_logging.naari_logger import LogManager
 from naari_app.util.config_builder import DeviceConfig, UISettings
 
 __all__ =[
+    'send_payload',
+    'send_device_update',
     'send_device_power_update',
     'brightness_adjustment',
     'send_preset'
 ]
+
+MAINDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ",,"))
+load_dotenv(os.path.join(MAINDIR, ".env"))
+TO_LOG = int(os.getenv("LOGGING", "0")) == 1
 
 # Hard coded default values. Here if nothing in config_file to reference.
 # Tested and currently safe.
@@ -46,10 +56,13 @@ def _post_with_retries(url: str, json_body: Dict[str, Any], timeout: int = REQUE
             )
             return request_data  # leave status handling to caller
         except requests.RequestException as e:
-           # last_exc = e
             if attempt == retries:
-                # TODO: replace print with logger when ready
-                print(f"[send_payload] POST failed after {attempt} attempts: {e}")
+                LogManager.print_message(
+                    "[send_payload] POST failed after %s attempts: %s",
+                    attempt, e,
+                    to_log=TO_LOG,
+                    log_level=logging.ERROR
+                )
                 raise PayloadRetryError(url, attempt, e) from e
             time.sleep(backoff * (2 ** attempt))
 

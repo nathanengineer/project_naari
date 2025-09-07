@@ -27,7 +27,26 @@ MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE"))     # Size in MB
 
 
 class LogManager:
+    """
+        Singleton-style logging manager for the NAARI application.
 
+        This class centralizes logging across the Dash app, ensuring that all
+        modules and callbacks can use a consistent logger without configuring
+        logging separately. It manages log files, automatically rotates them when
+        size limits are exceeded, and provides a single entry point for writing
+        messages to either stdout or the active log file.
+
+        Key features:
+            • Creates and manages log files in the app's `Logs` directory.
+            • Automatically selects the most recent log file or creates a new one.
+            • Rotates logs when file size exceeds the configured limit.
+            • Filters noisy library loggers (httpx, urllib3) to reduce clutter.
+            • Supports optional cleanup of old log files.
+            • Provides a unified `print_message` method that:
+                - Supports lazy `%s`-style formatting.
+                - Adds caller function name context to messages.
+                - Can direct output to stdout, stderr, warnings, or the log file.
+    """
     _instance = None
     _current_file_path: Path = None
 
@@ -73,6 +92,7 @@ class LogManager:
         # We get the file path after first checking for existance and size.
         log_file_path = self.current_file_path
 
+        # Prevents 'Info' from requests being logged, prevents flooding the logger.
         logging.getLogger("httpx").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
 
@@ -186,17 +206,3 @@ class LogManager:
             if args:
                 message = message % args
             print(message)
-
-
-
-
-def get_script_name(filename: str) -> str:
-    return os.path.basename(os.path.abspath(filename)).split('.')[0]
-
-
-def flush_newline():
-    print("\n", end="")
-    sys.stdout.flush()
-
-
-
