@@ -5,3 +5,5 @@ dash-daq==0.6.0
 dash-bootstrap-components==2.0.3
 httpx
 python-dotenv
+pylint
+gunicorn

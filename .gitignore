@@ -12,4 +12,3 @@ nari_config - backup.json
 presets.json
 save_code.py
 test_stuff.py
-wsgi.py
