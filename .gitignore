@@ -8,7 +8,6 @@ naari_logging/Logs
 .env
 data.json
 naari_config.json
-nari_config - backup.json
 presets.json
 save_code.py
 test_stuff.py
