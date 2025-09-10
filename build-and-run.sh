@@ -1,7 +1,7 @@
 # === CONFIG ===
 REPO_URL="https://github.com/nathanengineer/project_naari.git"
 APP_NAME="naari"
-DEFAULT_PORT=8050
+DEFAULT_PORT=80
 BRANCH="${1:-main}"
 ENV_FILE=".env"
 CONFIG_FILE="$(pwd)/naari_config.json"
