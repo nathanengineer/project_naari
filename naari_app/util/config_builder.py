@@ -23,7 +23,7 @@ class DeviceConfig(TypedDict):
 
 class UISettingsInput(TypedDict):
     """ Internal Structure of the specific UI Setting. """
-    value: str | int | float
+    value: str | int | float | bool
     type: str
 
 
@@ -38,7 +38,7 @@ class UISettings(TypedDict):
     retries: UISettingsInput                # (int) Number of attempts a Get or POST action takes
     retry_backoff: UISettingsInput          # (float) Time set added to specific Timeout time in (sec)
     request_timeout: UISettingsInput        # (int) TIme set to end connection to possible dead or hang device
-    ui_theme:  NotRequired[Literal["dark", 'light']]
+    ui_theme:  UISettingsInput
 
 
 class DevicePreset(TypedDict):
@@ -72,15 +72,42 @@ def make_empty_config(app_name: str = "WLED Controller") -> NaariSettingsConfig:
     return {
         "devices": [],
         "ui_settings": {
-            "app_name": app_name,
-            "polling_rate": 3,
-            "connect_timeout": 2,
-            "read_timeout": 5,
-            "request_timeout": 3,
-            "max_concurrency": 10,
-            "retries": 2,
-            "retry_backoff": 0.25,
-            "ui_theme": "dark"
+            "app_name": {
+                "value": app_name,
+                "type": "str"
+            },
+            "polling_rate": {
+                "value": 3,
+                "type": "int"
+            },
+            "connect_timeout": {
+                "value": 2,
+                "type": "int"
+            },
+            "read_timeout": {
+                "value":5,
+                "type": "int"
+            },
+            "request_timeout": {
+                "value":3,
+                "type": "int"
+            },
+            "max_concurrency": {
+                "value": 10,
+                "type": "int"
+            },
+            "retries": {
+                "value": 2,
+                "type": "int"
+            },
+            "retry_backoff": {
+                "value": 0.25,
+                "type": "float"
+            },
+            "ui_theme": {
+                "value": 0,
+                "type": "bool"
+            }
         },
         "themes": [],
     }
@@ -102,8 +129,8 @@ def write_empty_config(path: str) -> NaariSettingsConfig:
     Raises:
         OSError: if the directory or file cannot be written.
     """
-    cfg = make_empty_config()
+    config = make_empty_config()
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=4, ensure_ascii=False)
-    return cfg
+        json.dump(config, f, indent=4, ensure_ascii=False)
+    return config

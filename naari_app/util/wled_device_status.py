@@ -123,12 +123,8 @@ async def get_presets(device_address_list: Iterable[str], max_concurrency: int =
         return await asyncio.gather(*tasks, return_exceptions=False)
 
 
-def poll_all_devices(device_address_list: Iterable[str] | None = None):
+def poll_all_devices(device_address_list: Iterable[str]):
     # Lock prevents multi connections to be polled and thus clogging up the pipeline
-    if not device_address_list:
-        # TODO: add logging here for error
-        device_address_list = get_devices_ip()
-
     if not _POLL_LOCK.acquire_lock(blocking=False):     # pylint: disable=no-member
         raise PollingThreadLock
 
@@ -139,7 +135,7 @@ def poll_all_devices(device_address_list: Iterable[str] | None = None):
         _POLL_LOCK.release()
 
 
-def poll_device_presets(device_address_list: Iterable[str] | None = None):
+def poll_device_presets(device_address_list: Iterable[str]):
     if not device_address_list:
         LogManager.print_message(
             "No list of IP supplied. Possible Config or supplied error. Need to correct. Reading from file.",

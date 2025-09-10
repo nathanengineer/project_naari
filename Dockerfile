@@ -19,11 +19,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose Dash app port
-EXPOSE 8050
+EXPOSE 80
 
 # Set environment variables (can be overridden via --env-file)
 ENV PYTHONUNBUFFERED=1 \
-    PORT=8050
+    PORT=80
 
 # Run with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8050", "wsgi:server"]
+CMD ["gunicorn", "--bind", "0.0.0.0:80", "wsgi:server"]

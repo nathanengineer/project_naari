@@ -11,7 +11,7 @@ from dash import ctx as callback_context
 from dash.exceptions import PreventUpdate
 
 from naari_logging.naari_logger import LogManager
-from naari_app.util.config_builder import DeviceConfig
+from naari_app.util.config_builder import DeviceConfig, write_empty_config
 
 FuncParms = ParamSpec("FuncParms")
 FuncReturn = ParamSpec("FuncReturn")
@@ -69,12 +69,12 @@ def naari_config_load(file_path: str = CONFIG_PATH):
             config_file = json.load(file)
     except (FileNotFoundError, json.JSONDecodeError) as e:
         LogManager.print_message(
-            "[device_load] Failed to load config from %s: %s",
+            "[device_load] Failed to load config from %s: %s \nCreating Base Config File",
             file_path, e,
             to_log=TO_LOG,
             log_level=logging.ERROR
         )
-        raise
+        return write_empty_config(file_path)
 
     if not config_file:
         LogManager.print_message(

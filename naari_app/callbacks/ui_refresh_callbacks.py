@@ -39,6 +39,6 @@ def layout_refresh_callbacks(app):
            Rebuild UI sections when `naari_settings` changes. Normally after Config Save.
         """
         themes = naari_settings.get('themes', [])
-        theme_options = [{'label': theme['name'], 'value': theme['id']} for theme in themes]
+        theme_options = [{'label': theme['name'], 'value': theme['id']} for theme in themes if themes]
 
-        return theme_options, main_content(naari_settings['devices']), config_modal(naari_settings), True
+        return theme_options, main_content(naari_settings.get('devices', [])), config_modal(naari_settings), True

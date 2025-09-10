@@ -96,7 +96,7 @@ def device_settings_callback(app):
         if triggered == 'device_add_button' and add_mode_click:     # pylint: disable=no-else-return
 
             # Collect existing device IDs from config and performce a safe additoin if nothing in config file.
-            device_ids = (device["id"] for device in naari_settings['devices'])
+            device_ids = [device.get("id", 0) for device in naari_settings['devices']]
             next_id = (max(device_ids) + 1) if device_ids else 1        # pylint: disable=using-constant-test
 
             # Setup the dictionary that will be sent
