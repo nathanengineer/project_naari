@@ -1,8 +1,9 @@
 # N.A.A.R.I  (Nathan’s Ambient Assistant Room Interface)
 
-⚠️ Status: **Active Development**
+⚠️ Status: **Beta Testing**
 
-N.A.A.R.I is not yet a fully deployable standalone web application. It currently runs in Dash development mode. Features are functional but under testing, and bugs are still being worked out.  
+N.A.A.R.I is now available as a deployable Docker container, but is still considered in **beta**. Features are functional and the core system is stable, but active testing is ongoing.  
+You may encounter bugs, unfinished features, or behavior subject to change.    
 User discretion advised, N.A.A.R.I has warned you. 🤖
 <br><br>
 
@@ -36,8 +37,6 @@ I designed and built Project **N.A.A.R.I**, a Python-based Dash application that
 
 ### 🚧 Current Planned / Roadmap
 
-- Server deployment for homelabs, Raspberry Pi, or similar setups
-
 - Device info panel for real-time status of active devices (maybe)
 
 - Preset creation directly inside the Dash cards
@@ -54,7 +53,7 @@ I designed and built Project **N.A.A.R.I**, a Python-based Dash application that
 
 - Current workflows include:
 
-  - Selecting global themes
+  - Selecting global themes OR individual device presets
 
   - Adjusting brightness and power state
 
@@ -85,23 +84,86 @@ Compatibility: Works with WLED v0.15.1 and expected to support future versions t
 
 ## Installation and Setup
 
-Python Version: Recommended 3.12 or greater (may work on 3.10 and 3.11 but not tested)
+### For Non Server Deployment (Window / macOS)
+**Python Version:** Recommended 3.12 or greater (may work on 3.10 and 3.11 but not tested)
 
 Clone this repo and run the setup script:
 
 ```bash
-git clone https://github.com/nathanengineer/NAARI.git
+git clone https://github.com/nathanengineer/project_naari.git NAARI
 cd NAARI
 setup.cmd
 ```
 This installs dependencies from requirements.txt.
 
-Remember to configure an .env file from .env_example.
+📝 Don’t forget to create and configure a .env file from .env_example.
+See the .ENV Configuration section below for details.
 
 Launch app: dev_naari_launcher.cmd
 Open your prowser at http://127.0.0.1:{.env PORT}
+
+
+### For Server Deployment (Docker on Raspberry Pi or Local Server)
+> This app is designed to run locally via Docker. It is intended to stay on your local LAN and can optionally be assigned a static IP using macvlan.
+
+**Prerequisites:**
+- Docker and Docker Compose installed
+- Git installed
+- Root or sudo access
+
+> Note: For Raspberry Pi, tested on Pi 5; should also work on Pi 4
+
 <br><br>
 
+**1. Create Docker macvlan Network (for assigning a static LAN IP))**
+
+```bash
+sudo docker network create -d macvlan \
+  --subnet=192.168.100.0/24 \
+  --gateway=192.168.100.1 \
+  -o parent=eth0 \
+  --ip-range=192.168.1.200/30 \
+  custom-macnet
+```
+> Important: Replace subnet, gateway, and ip-range with values matching your own LAN setup. Do not copy blindly.
+---
+
+**2. Clone Repository**
+```bash
+git clone https://github.com/nathanengineer/project_naari.git naari
+cd naari
+```
+---
+
+**3. Create and Edit .env File**
+```bash
+cp .env_example .env
+sudo nano .env
+```
+Refer to the .ENV Configuration section below for required fields
+
+---
+
+**4. Build and Run Docker APP**
+Use the provided script to build and run the containerized app:
+```bash
+./build-and-run.sh
+```
+---
+
+### .ENV Configuration
+Environmental variable reference for local development and Docker deployment:
+- HOST — Binds the app to the specified IP. Use 0.0.0.0 to expose it to the entire device network (e.g. when running in a container).
+- PORT — (Dev Optional) Port to access the app (e.g. http://localhost:8000).
+- DEBUG — (Dev Optional) Set to 1 to enable debug mode (detailed error logs, hot reload, etc). Set to 0 for production use.
+- RELOADER — (Dev Optional) Set to 1 to auto-reload the app when files change.
+- TESTRUN — (Optional) Set to 1 to trigger app-specific test logic (if implemented).
+- MAX_FILE_SIZE — (Required) Max size (in MB) of a log file before rotation occurs (e.g. 25).
+- LOGGING — (Required) If 1, enables file logging via the internal LogManager. Set to 0 to log only to stdout.
+- USE_MACVLAN — (Linux/Docker Optional) If 1, assigns a static IP to the container via a macvlan network.
+- DOCKER_NET_NAME — (Required if using macvlan) Name of your macvlan Docker network (e.g. pi-macnet).
+- CONTAINER_IP — (Required if using macvlan) Static IP to assign to the container on your LAN (e.g. 192.168.1.201).
+<br><br>
 
 ## Contribution Guidelines
 
