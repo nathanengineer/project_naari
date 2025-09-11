@@ -2,9 +2,9 @@
 Handles dynamic UI refreshes in response to app setting changes.
 
 This includes the following functionalities:
-    - Rebuilding layout content based on updated settings
-    - Updating theme-related UI elements
-    - Reflecting changes made through the Config Modal
+    - Rendering/updating layout content
+    - Updating theme-related dropdowns or containers
+    - Reflecting changes made in the Config Modal when updated
 """
 
 from __future__ import annotations
@@ -21,9 +21,9 @@ def layout_refresh_callbacks(app):
         Register callbacks that refresh UI sections based on updated settings.
 
         Includes:
-            - Rebuilding layout content
+            - Rendering/updating layout content
             - Updating theme-related dropdowns or containers
-            - Reflecting changes made in the Config Modal
+            - Reflecting changes made in the Config Modal when updated
     """
     @app.callback(
         [

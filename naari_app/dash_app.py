@@ -9,7 +9,6 @@ Main Dash app bootstrap for the WLED Controller.
 from __future__ import annotations
 
 import logging
-import time
 import os
 import sys
 from traceback import format_exc
@@ -26,15 +25,13 @@ from naari_logging.naari_logger import LogManager
 logger = LogManager()
 logger.setup_file_logging()
 
-from naari_app.util.util_functions import naari_config_load, device_polled_data_mapping
+from naari_app.util.util_functions import naari_config_load
 
-from naari_app.util.initial_load import get_initial_load
 from naari_app.ui_parts.navbar import navbar
 from naari_app.ui_parts.sidebar import sidebar
 from naari_app.ui_parts.popups import refresh_popup
 
 from naari_app.modals.config_modal import config_modal
-
 
 from naari_app.callbacks.startup_callbacks import startup_callbacks
 from naari_app.callbacks.ui_refresh_callbacks import layout_refresh_callbacks

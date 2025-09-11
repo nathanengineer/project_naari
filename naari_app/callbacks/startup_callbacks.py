@@ -1,10 +1,11 @@
 """
-Handles page load initialization for the app.
+Handles application initialization on page load.
 
-This includes the following functionalities:
-    - Validating or rebuilding the device cache
-    - Preparing initial settings and enabling key functionality
-    - Pulling the initial app configuration settings
+This includes:
+    - Loading the NAARI configuration from file
+    - Polling WLED devices for initial /json and /presets.json data
+    - Preparing initial cache and UI state
+    - Enabling polling after successful startup
 
 """
 
@@ -15,7 +16,7 @@ import time
 import os
 
 from dotenv import load_dotenv
-from dash import Input, Output, State
+from dash import Input, Output
 from dash.exceptions import PreventUpdate
 
 from naari_logging.naari_logger import LogManager
@@ -51,8 +52,14 @@ def startup_callbacks(app):
     # TODO: see if there a way I can send a notification or make a UI change if an error occures.
     def page_data_load(_):
         """
-            On page load/reload, validate or rebuild device cache.
-            Enables poller only after cache looks valid.
+            Triggered on initial page load or reload.
+
+            Loads the NAARI configuration from `naari_config.json`, performs initial GET
+            polling of WLED devices, and populates the core app data stores for settings,
+            device states, and device presets.
+
+            Also manages a basic retry loop to handle async device startup or polling delays,
+            especially in production environments (e.g., Docker container cold starts).
         """
 
         naari_settings, cach_data, cach_presets = initial_load()
@@ -84,8 +91,10 @@ def startup_callbacks(app):
         return naari_settings, None, None, True, False
 
 
+#---------------Helper Function----------------#
+
 def initial_load():
-    """ Provides the ability to load. """
+    """ Loads the NAARI configuration and performs the first poll of all active devices. """
     naari_settings = naari_config_load()
 
     if not naari_settings:

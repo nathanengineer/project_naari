@@ -22,7 +22,7 @@ def get_initial_load(naari_devices: list[DeviceConfig]):
 
             try:
                 INITIAL_DEVICES = asyncio.run(run_status(devices_ip))
-                time.sleep(.5)   # throttles loading to allow for devices to catch up
+                time.sleep(.5)   # throttles loading to allow for devices load into environment
                 INITIAL_PRESETS = asyncio.run(get_presets(devices_ip))
             except:
                 INITIAL_DEVICES = {}

@@ -4,7 +4,7 @@ Modulare provides schema design for the Config File used by N.A.R.I
 As well as  builders and Validations
 """
 
-from typing import TypedDict, NotRequired, Literal
+from typing import TypedDict
 import json
 import os
 
@@ -68,7 +68,7 @@ class NaariSettingsConfig(TypedDict):
 #-------------------------- Configer Functions -------------------------------#
 
 def make_empty_config(app_name: str = "WLED Controller") -> NaariSettingsConfig:
-    """ Return a brand-new, valid empty Naari config (type-safe) """
+    """ Return a brand-new, valid empty NAARI config (type-safe) """
     return {
         "devices": [],
         "ui_settings": {
