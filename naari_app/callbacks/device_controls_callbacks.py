@@ -53,16 +53,17 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
             State('device_catch_data', 'data'),
             State('devices_catch_presets', 'data'),
             State('naari_settings', 'data'),
+            State('elements_initialized', 'data')
         ]
     )
     def brightness_preset_setter(brightness_chain_trigger, preset_option, is_auto_mode, polled_cach_data,      #pylint: disable=too-many-locals, too-many-branches, too-many-arguments, too-many-positional-arguments
-                                 cached_presets, naari_settings):
+                                 cached_presets, naari_settings, elements_initialized):
         """
             The selected preset will perform the following actions
             1) will adjust the Brightness slider widget according to current polled device data
             2) if preset is selected, will adjust the brightness widget accordingly and send a 'POST' call to the device chanigng to selected preset.
         """
-        if not ctx.triggered_id:
+        if not ctx.triggered_id or not elements_initialized:
             raise PreventUpdate
 
         # Build baseline: device_id -> current brightness from polled data

@@ -1,0 +1,27 @@
+# Don't include Git-related files
+.git
+.gitignore
+
+# Python environment and cache
+.venv/
+__pycache__/
+*.py[cod]
+
+# IDE/project configs
+.vscode/
+.idea/
+
+# App-specific files you don't want in image
+naari_app/callbacks/side_nav_callback.py
+naari_app/app_ids.py
+naari_logging/Logs/
+.env
+data.json
+naari_config.json
+presets.json
+save_code.py
+test_stuff.py
+
+# Docker build support files (optional)
+.dockerignore
+build-and-run.sh

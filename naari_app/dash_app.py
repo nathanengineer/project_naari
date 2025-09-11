@@ -9,9 +9,9 @@ Main Dash app bootstrap for the WLED Controller.
 from __future__ import annotations
 
 import logging
-import time
 import os
 import sys
+from traceback import format_exc
 # This is here bellow to handle directory pathway shenanigans
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -25,15 +25,13 @@ from naari_logging.naari_logger import LogManager
 logger = LogManager()
 logger.setup_file_logging()
 
-from naari_app.util.util_functions import naari_config_load, device_polled_data_mapping
+from naari_app.util.util_functions import naari_config_load
 
-from naari_app.util.initial_load import get_initial_load
 from naari_app.ui_parts.navbar import navbar
 from naari_app.ui_parts.sidebar import sidebar
 from naari_app.ui_parts.popups import refresh_popup
 
 from naari_app.modals.config_modal import config_modal
-
 
 from naari_app.callbacks.startup_callbacks import startup_callbacks
 from naari_app.callbacks.ui_refresh_callbacks import layout_refresh_callbacks
@@ -72,24 +70,6 @@ def app_layout():
 
     naari_settings = naari_config_load()
 
-    # Initial poll fetch
-    polled_devices, polled_presets = get_initial_load(naari_devices=naari_settings.get('devices'))
-
-    # Intentional pause to let devices settle before regular polling starts.
-    # (Keeps first render consistent with initial poll results.)
-    time.sleep(3)
-
-    # TODO: is there a simplier way to do it than remember to add a funciton to it?
-    # Adds device_id to the polled data
-    polled_devices = device_polled_data_mapping(
-        cach_data=polled_devices,
-        devices=naari_settings.get('devices')
-    )
-    polled_presets = device_polled_data_mapping(
-        cach_data=polled_presets,
-        devices=naari_settings.get('devices')
-    )
-
     return dbc.Container(
         id = "app-container",
         fluid=True,
@@ -103,9 +83,9 @@ def app_layout():
 
                     # Hidden stores (default shapes matter for downstream callbacks)
                     dcc.Store(id='naari_settings', data=naari_settings, storage_type='session'),
-                    dcc.Store(id ='initial_device_catch_data', data=polled_devices, storage_type='session'),
+                    dcc.Store(id ='initial_device_catch_data', data=None, storage_type='session'),
                     dcc.Store(id='device_catch_data', data=None, storage_type='session'),
-                    dcc.Store(id='devices_catch_presets', data=polled_presets, storage_type='session'),
+                    dcc.Store(id='devices_catch_presets', data=None, storage_type='session'),
 
                     # For Initial Calls, Chains, and preventions
                     dcc.Store(id='elements_initialized', data=None, storage_type='session'),
@@ -128,7 +108,7 @@ def app_layout():
                     id='app_sidebar',
                     xs=12,
                     md=3,
-                    children= sidebar(naari_settings.get('themes'))
+                    children=sidebar(naari_settings.get('themes'))
                 ),
                 dbc.Col(
                     id='app_main_content',
@@ -207,12 +187,12 @@ def dash_app():
 if __name__ == '__main__':
     try:
         the_app = dash_app()
-
         the_app.run(debug=DEBUG, host=HOST, port=PORT, threaded=True, use_reloader=RELOADER)
     except Exception as err:        # pylint: disable=broad-exception-caught
+
         logger.print_message(
-            "Major problem during run >> %s",
-            err,
+            "Major problem during run >> %s \ntraceback >> %s",
+            err, format_exc(),
             to_log=TO_LOG,
             log_level=logging.CRITICAL
         )

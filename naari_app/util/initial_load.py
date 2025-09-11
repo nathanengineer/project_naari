@@ -1,5 +1,6 @@
 import asyncio
 from threading import Lock
+import time
 
 from naari_app.util.config_builder import DeviceConfig
 from naari_app.util.wled_device_status import get_devices_ip, run_status, get_presets
@@ -21,6 +22,7 @@ def get_initial_load(naari_devices: list[DeviceConfig]):
 
             try:
                 INITIAL_DEVICES = asyncio.run(run_status(devices_ip))
+                time.sleep(.5)   # throttles loading to allow for devices load into environment
                 INITIAL_PRESETS = asyncio.run(get_presets(devices_ip))
             except:
                 INITIAL_DEVICES = {}

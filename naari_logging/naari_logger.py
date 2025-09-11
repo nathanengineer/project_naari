@@ -187,22 +187,17 @@ class LogManager:
         else:
             # message % args is used to insert submitted variables in the message as part of the
             #   lazy %s method.
+            if args:
+                message = message % args
             if log_level == 30:
                 # Warning message and it's not logging.
-                if args:
-                    message = message % args
                 warnings.warn(message)
-
             elif log_level == 40:
                 # Error message and it's not logging
-                if args:
-                    message = message % args
                 print(
                     message,
                     file=sys.stderr
                 )
-
-            # Regular stdout message.
-            if args:
-                message = message % args
-            print(message)
+            else:
+                # Regular stdout message.
+                print(message)
