@@ -12,6 +12,7 @@ TO_LOG = int(os.getenv("LOGGING", "0")) == 1
 
 logger = LogManager()
 logger.setup_file_logging()
+logger.print_message("NAARI APP activate in WSGI mode", to_log=TO_LOG)
 
 try:
     server = dash_app().server
