@@ -18,6 +18,8 @@ from naari_logging.naari_logger import LogManager
 from naari_app.util.util_functions import save_configer
 from naari_app.util.config_builder import DeviceConfig, UISettings, ThemeSelectionConfig, NaariSettingsConfig
 
+__all__ = ['config_callbacks']
+
 MAINDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ",,"))
 load_dotenv(os.path.join(MAINDIR, ".env"))
 TO_LOG = int(os.getenv("LOGGING", "0")) == 1
@@ -53,7 +55,7 @@ def config_callbacks(app):
             State('devices_stack', 'children')
         ],
     )
-    def open_model(open_button, save_button, close_button, current_themes_children_set, current_devices_children_set):
+    def open_model(_open_button, _save_button, _close_button, current_themes_children_set, current_devices_children_set):
         """ Handles the opening and closing of the Modal. For when someone clicks Cancel, will revert back to previous state. """
         if not ctx.triggered:
             raise PreventUpdate
@@ -62,7 +64,7 @@ def config_callbacks(app):
 
         #if data_app_load_check and trigger_id == 'config-btn':
         if trigger_id == 'config-btn':                                                                          # pylint: disable=no-else-return
-            return True, 0, current_themes_children_set, 0, current_devices_children_set, True
+            return True, 0, current_themes_children_set, 0, current_devices_children_set, False
 
         #elif data_app_load_check and data_app_load_check and trigger_id == 'config_save_button':
         elif trigger_id == 'config_save_button':                                                                # pylint: disable=no-else-return
@@ -103,7 +105,12 @@ def config_callbacks(app):
 
 
     @app.callback(
-        Output("naari_settings", "data", allow_duplicate=True),
+        [
+            Output("naari_settings", "data", allow_duplicate=True),
+            Output('refresh_button', 'n_clicks', allow_duplicate=True),
+            Output('data_app_load_check', 'data', allow_duplicate=True)
+
+        ],
         Input("config_save_button", "n_clicks"),
         [
             # Devices tab
@@ -122,13 +129,14 @@ def config_callbacks(app):
 
             # Existing config (optional, fallback)
             State("naari_settings", "data"),
+            State('refresh_button', 'n_clicks')
         ]
     )
-    def save_config( n_clicks, device_instance_names, device_addresses, device_master_syncs, device_actives, theme_names,   # pylint: disable=too-many-arguments, too-many-positional-arguments
-                     theme_preset_values, ui_setting_values, ui_setting_metas, existing_config) -> NaariSettingsConfig:
+    def save_config( saved_button_clicked, _device_instance_names, _device_addresses, _device_master_syncs, _device_actives, _theme_names,   # pylint: disable=too-many-arguments, too-many-positional-arguments
+                     _theme_preset_values, _ui_setting_values, _ui_setting_metas, existing_config, refresh_button_clicks) -> tuple[NaariSettingsConfig, int, bool] :
         """ Handles the saving and updating of the Config file of current settings. """
 
-        if not n_clicks:
+        if not saved_button_clicked:
             raise PreventUpdate
 
         try:
@@ -156,7 +164,7 @@ def config_callbacks(app):
             # TODO: Add in notification window?
             raise PreventUpdate         # pylint: disable=raise-missing-from
 
-        return current_config
+        return current_config, refresh_button_clicks +1, False
 
 
 #---------------------- Helper Functions ---------------------------------------------------------#
