@@ -25,7 +25,7 @@ def _master_power_button() -> dbc.Button:
     return dbc.Button(
         title='Power',
         id="master-power-btn",
-        color="primary",
+        color="dark",   # color different as it will be set by indicator status
         class_name="d-flex justify-content-center align-items-center mb-2 w-auto",
         children=[
             html.I(className="bi bi-power fs-5"),
@@ -74,6 +74,7 @@ def _refresh_button() -> dbc.Button:
         id='refresh_button',
         color='primary',
         className="d-flex justify-content-center align-items-center mb-2",
+        n_clicks=0,
         children=[
             html.I(className="bi bi-arrow-repeat fs-5"),
             html.Span(

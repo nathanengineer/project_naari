@@ -47,9 +47,7 @@ def config_modal(config_settings: NaariSettingsConfig) -> dbc.Modal:
         return dbc.Button(
             children="Save",
             id='config_save_button',
-            n_clicks=0,
-            color='secondary',
-            disabled=False
+            n_clicks=0
         )
 
     def _cancel_button():
