@@ -74,8 +74,6 @@ I designed and built Project **N.A.A.R.I**, a Python-based Dash application that
 
 Core: Python and Dash
 
-Environment: Dash currently runs in development mode, server deployment coming soon
-
 Devices: Any WLED-compatible controller including MAGWLED, QuinLED, GLEDOPTO ESP32, or DIY ESP32 builds
 
 Compatibility: Works with WLED v0.15.1 and expected to support future versions that maintain JSON API commands
@@ -112,8 +110,6 @@ Open your prowser at http://127.0.0.1:{.env PORT}
 - Root or sudo access
 
 > Note: For Raspberry Pi, tested on Pi 5; should also work on Pi 4
-
-<br><br>
 
 **1. Create Docker macvlan Network (for assigning a static LAN IP))**
 
