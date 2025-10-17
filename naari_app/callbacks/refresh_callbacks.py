@@ -56,11 +56,6 @@ def refresh_callbacks(app):
     def ui_updated(naari_settings: NaariSettingsConfig, refresh_button_clicks):
         """ Rebuild UI sections when `naari_settings` changes. Normally after Config Save. """
 
-        LogManager.print_message(
-            "UI Update triggered",
-            to_log=TO_LOG
-        )
-
         themes = naari_settings.get('themes', [])
         theme_options = [{'label': theme['name'], 'value': theme['id']} for theme in themes if themes]
 
@@ -80,11 +75,6 @@ def refresh_callbacks(app):
         if not ctx.triggered:
             raise PreventUpdate
 
-        LogManager.print_message(
-            "refresh triggered",
-            to_log=TO_LOG
-        )
-
         return True, refresh_trigger + 1
 
 
@@ -96,7 +86,7 @@ def refresh_callbacks(app):
             Output('refresh_popup', 'children'),
             Output('poll_interval', 'disabled', allow_duplicate=True),
             Output('poll_interval', 'interval', allow_duplicate=True),
-            Output('reset_poll_interval', 'data', allow_duplicate=True),
+            Output('reset_poll_interval', 'n_clicks', allow_duplicate=True),
             Output('device_catch_data', 'data', allow_duplicate=True),
             Output('devices_catch_presets', 'data', allow_duplicate=True),
             Output('brightness_chain_trigger', 'n_clicks'),
@@ -105,11 +95,12 @@ def refresh_callbacks(app):
         [
             State('data_app_load_check', 'data'),
             State('brightness_chain_trigger', 'n_clicks'),
-            State('naari_settings', 'data')
+            State('naari_settings', 'data'),
+            State("reset_poll_interval", "n_clicks")
         ],
         prevent_initial_call=True
     )
-    def refresh_data(_, app_loaded, brightness_chain_trigger, naari_settings):
+    def refresh_data(_, app_loaded, brightness_chain_trigger, naari_settings, reset_poll_interval):
         """
             Poll all active (or all known) devices and update app data stores.
 
@@ -121,11 +112,6 @@ def refresh_callbacks(app):
         """
         if not ctx.triggered:
             raise PreventUpdate
-
-        LogManager.print_message(
-            "Data being Refresh/loaded triggered",
-            to_log=TO_LOG
-        )
 
         # popup_open is currently service two functions
         #   1) on initial page or naari config update, no need to populate a popup
@@ -198,8 +184,7 @@ def refresh_callbacks(app):
                 log_level=logging.CRITICAL
             )
 
-        reset_poll_interval = True
-        return (True, popup_open, popup_color, popup_message, poll_interval_disabled, current_interval_time * 1000, reset_poll_interval,
+        return (True, popup_open, popup_color, popup_message, poll_interval_disabled, current_interval_time * 1000, reset_poll_interval + 1,
         cache_data, cache_presets, brightness_chain_trigger + 1)
 
 #---------- Helper Functions------------------------#

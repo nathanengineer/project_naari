@@ -80,7 +80,8 @@ def app_layout():
                     dcc.Location(id='url', refresh=False),
                     # converting interval from sec -> ms
                     dcc.Interval(id='poll_interval', interval=(naari_settings['ui_settings']['polling_rate']['value'] * 1000), n_intervals=0, disabled=True),
-                    dcc.Store("reset_poll_interval", data=False, storage_type='session'),
+                    #dcc.Store("reset_poll_interval", data=False, storage_type='session'),
+                    html.Div(id="reset_poll_interval", n_clicks=0),
 
                     # Hidden stores (default shapes matter for downstream callbacks)
                     dcc.Store(id='naari_settings', data=naari_settings, storage_type='session'),
@@ -178,8 +179,10 @@ def dash_app():
     @app.callback(
         Output('elements_initialized', 'data'),
         Input('device_catch_data', 'data'),
-        State('elements_initialized', 'data')
+        State('elements_initialized', 'data'),
+        prevent_initial_call=True
     )
+
     def elements_started(_, prev):
         """Mark the app as initialized once device data has been set at least once."""
         return True

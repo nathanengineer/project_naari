@@ -13,7 +13,7 @@ import os
 import logging
 
 from dotenv import load_dotenv
-from dash import Input, Output, State, ALL, ctx
+from dash import Input, Output, State, ALL, ctx, no_update
 from dash.exceptions import PreventUpdate
 
 from naari_logging.naari_logger import LogManager
@@ -123,11 +123,6 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
         if not ctx.triggered_id or not elements_initialized:
             raise PreventUpdate
 
-        LogManager.print_message(
-            "Brightness Preset triggered",
-            to_log=TO_LOG
-        )
-
         # Build baseline: device_id -> current brightness from polled data
         try:
             devices_brightness = {
@@ -187,17 +182,18 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
             Output('auto_mode', 'data', allow_duplicate=True),
             Output({'type': 'brightness_indicator', 'device_id': ALL}, 'children'),
             Output('init_brightness_chain_trigger', 'data', allow_duplicate=True),
-            Output('reset_poll_interval', 'data', allow_duplicate=True)
+            Output('reset_poll_interval', 'n_clicks', allow_duplicate=True)
         ],
         Input({'type': "brightness_slider", 'device_id': ALL}, "value"),
         [
             State('auto_mode', 'data'),
             State("naari_settings", 'data'),
-            State('init_brightness_chain_trigger', 'data')
+            State('init_brightness_chain_trigger', 'data'),
+            State("reset_poll_interval", "n_clicks")
         ],
         prevent_initial_call=True
     )
-    def handle_brightness_changes(brightness_values, auto_mode, naari_settings, brightness_chain_trigger):
+    def handle_brightness_changes(brightness_values, auto_mode, naari_settings, brightness_chain_trigger, reset_poll_interval):
         """
             Mirror slider values into the brightness indicators;
             if user-driven and auto mode is off, send a brightness update to the targeted device.
@@ -205,14 +201,9 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
         if not ctx.triggered:
             raise PreventUpdate
 
-        LogManager.print_message(
-            "Brightness indicator triggered",
-            to_log=TO_LOG
-        )
-
         # Prevents turning devices on/off during initial page loading.
         if brightness_chain_trigger:
-            return False, list(brightness_values), False, False
+            return False, list(brightness_values), False, no_update
 
         # Only when manipulated manually by user
         if not auto_mode:
@@ -255,7 +246,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
                         log_level=logging.ERROR
                     )
 
-        return False, list(brightness_values), False, True
+        return False, list(brightness_values), False, reset_poll_interval + 1
 
 
 #----------------------------------- helper functions-----------------------#

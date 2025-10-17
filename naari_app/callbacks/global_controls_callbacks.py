@@ -9,7 +9,7 @@ import logging
 
 from dotenv import load_dotenv
 import dash.exceptions
-from dash import Input, Output, State, ALL, ctx
+from dash import Input, Output, State, ALL, ctx, no_update
 from dash.exceptions import PreventUpdate
 
 from naari_logging.naari_logger import LogManager
@@ -58,11 +58,6 @@ def global_controls_callback(app):
         if elements_initialized is False:
             raise PreventUpdate
 
-        LogManager.print_message(
-            "Mode Change triggered",
-            to_log=TO_LOG
-        )
-
         themes = naari_settings.get('themes', [])
         theme = next((theme for theme in themes if theme.get('id') == int(selected_theme_id)), None)
         if not theme:
@@ -98,7 +93,7 @@ def global_controls_callback(app):
     @app.callback(
         [
             Output('master-power-btn', 'color'),
-            Output('reset_poll_interval', 'data', allow_duplicate=True)
+            Output('reset_poll_interval', 'n_clicks', allow_duplicate=True)
         ],
         [
             Input('master-power-btn', 'n_clicks'),
@@ -107,10 +102,11 @@ def global_controls_callback(app):
         [
             State("device_catch_data", 'data'),
             State('naari_settings', 'data'),
+            State("reset_poll_interval", "n_clicks")
         ],
         prevent_initial_call=True
     )
-    def master_power_button(_button_click, initial_load, polled_devices, naari_settings):    # pylint: disable=too-many-return-statements
+    def master_power_button(_button_click, _initial_load, polled_devices, naari_settings, reset_poll_interval):    # pylint: disable=too-many-return-statements
         """
             Handle clicks on the Master Power button.
 
@@ -126,14 +122,9 @@ def global_controls_callback(app):
             # TODO: raise notification
             raise PreventUpdate
 
-        LogManager.print_message(
-            "Master Power button Triggered",
-            to_log=TO_LOG
-        )
-
         master_device = get_master_device(naari_settings.get('devices'))
         if not master_device:
-            return 'Dark', False  # TODO: Work on pupop window for this error.
+            return 'Dark', no_update  # TODO: Work on pupop window for this error.
 
         udpn_enabled = next(
             (
@@ -147,7 +138,7 @@ def global_controls_callback(app):
             ), None)
 
         if udpn_enabled is None:
-            return 'secondary', False  # TODO: need popup window for this error.
+            return 'secondary', no_update  # TODO: need popup window for this error.
 
         is_power_on = next(
             (
@@ -164,8 +155,8 @@ def global_controls_callback(app):
         # Initial button color value
         if not ctx.triggered_id == 'master-power-btn':
             if is_power_on:
-                return "success", False  # Devices On
-            return 'danger', False  # Devices Off
+                return "success", no_update  # Devices On
+            return 'danger', no_update  # Devices Off
 
         # Toggle target power state
         # Not using API function call because intent is to use Master Sync device
@@ -174,8 +165,8 @@ def global_controls_callback(app):
         api_response = send_payload(master_device["address"], power_payload)
 
         if api_response.status_code == 200 and is_power_on:     # Devices Off   pylint: disable=no-else-return
-            return 'danger', True
+            return 'danger', reset_poll_interval + 1
         elif api_response.status_code == 200 and not is_power_on:   # Devices On
-            return 'success', True
+            return 'success', reset_poll_interval + 1
         else:
-            return 'secondary', True  # Issues on response
+            return 'secondary', reset_poll_interval + 1  # Issues on response

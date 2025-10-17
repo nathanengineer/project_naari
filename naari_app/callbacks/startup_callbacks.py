@@ -30,11 +30,11 @@ def startup_callbacks(app):
     """ Register startup callback for loading app configuration on page load."""
 
     @app.callback(
-        #[
-        Output('naari_settings', 'data', allow_duplicate=True),
-            #Output('data_app_load_check', 'data',  allow_duplicate=True),
+        [
+            Output('naari_settings', 'data', allow_duplicate=True),
+            Output('data_app_load_check', 'data',  allow_duplicate=True),
 
-        #],
+        ],
         Input('url', 'pathname'),
     )
     # TODO: see if there a way I can send a notification or make a UI change if an error occures.
@@ -46,11 +46,6 @@ def startup_callbacks(app):
             in the app's main settings store. If the config fails to load,
             the app halts further initialization.
         """
-
-        LogManager.print_message(
-            "Page Refresh/Load triggered",
-            to_log=TO_LOG
-        )
 
         naari_settings = naari_config_load()
         time.sleep(1)
@@ -64,4 +59,4 @@ def startup_callbacks(app):
             # TODO: create BIG popup error
             raise PreventUpdate
 
-        return naari_settings#, False
+        return naari_settings, False

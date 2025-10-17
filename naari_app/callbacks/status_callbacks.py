@@ -9,7 +9,7 @@ import logging
 import math
 
 from dotenv import load_dotenv
-from dash import Input, Output, State, ALL, ctx
+from dash import Input, Output, State, ALL, ctx, no_update
 from dash.exceptions import PreventUpdate
 
 from naari_logging.naari_logger import LogManager
@@ -35,23 +35,13 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
     """
 
     @app.callback(
-        [
-            Output('poll_interval', 'n_intervals'),
-            Output('reset_poll_interval', 'data', allow_duplicate=True)
-        ],
-        Input('reset_poll_interval', 'data'),
+        Output('poll_interval', 'n_intervals'),
+        Input('reset_poll_interval', 'n_clicks'),
         prevent_initial_call=True
     )
     def reset_polling_interval(reset_poll_interval):
         """ Reset Polling idle throttle. """
-        LogManager.print_message(
-            "polling interval restet triggered",
-            to_log=TO_LOG
-        )
-
-        if reset_poll_interval:
-            return 0, False
-        raise PreventUpdate
+        return 0
 
 
     @app.callback(
@@ -108,20 +98,20 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
     @app.callback(
         [
             Output({'type': 'power_button', 'device_id': ALL}, 'color'),
-            Output('reset_poll_interval', 'data', allow_duplicate=True)
+            Output('reset_poll_interval', 'n_clicks', allow_duplicate=True)
         ],
         [
             Input("device_catch_data", "data"),
             Input({'type': 'power_button', 'device_id': ALL}, 'n_clicks')
         ],
         [
-            Input({'type': 'power_button', 'device_id': ALL}, 'id'),
+            State({'type': 'power_button', 'device_id': ALL}, 'id'),
             State("device_catch_data", "data"),
             State('poll_interval', 'n_intervals'),
             State('naari_settings', 'data'),
-            State('reset_poll_interval', 'data')
+            State('reset_poll_interval', 'n_clicks')
         ],
-        prevent_initial_call=True,
+        prevent_initial_call=True
     )
     def device_power_button_status(polled_data, _power_button_press, power_button_ids, cached_device_data, poll_interval,         # pylint: disable=possibly-used-before-assignment, too-many-positional-arguments, too-many-locals
         naari_settings, reset_poll_interval):
@@ -148,10 +138,14 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
                 devices=naari_settings['devices'],
                 device_id=triggered_id['device_id']
             )
+            reset_poll_interval += 1  # True  # Resets polling intervals after push event
+
 
         elif triggered_id == 'device_catch_data':       # For Poll-Intervals
             devices_cach_data = polled_data
             target_device = None
+            reset_poll_interval = no_update  # True  # Resets polling intervals after push event
+
 
         else:
             raise PreventUpdate
@@ -218,7 +212,6 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
                         log_level=logging.ERROR
                     )
                     # leave state_map[target_id] unchanged
-                reset_poll_interval = True  # Resets polling intervals after push event
 
         # Map in exact UI order; safe fallback when state missing/None
         power_buttons_color = [button_indicator(indicator_status[device_id], device_id) for device_id in ui_devices_order ]
