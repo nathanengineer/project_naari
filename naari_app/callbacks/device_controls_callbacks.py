@@ -13,7 +13,6 @@ import os
 import logging
 
 from dotenv import load_dotenv
-import dash.exceptions
 from dash import Input, Output, State, ALL, ctx
 from dash.exceptions import PreventUpdate
 
@@ -21,6 +20,7 @@ from naari_logging.naari_logger import LogManager
 from naari_app.util.config_builder import DeviceConfig, UISettings
 from naari_app.util.send_payload import  send_preset, brightness_adjustment, PayloadRetryError
 from naari_app.util.util_functions import get_device
+from naari_app.util.wled_device_status import get_status
 
 __all__ = ['device_controls_callbacks']
 
@@ -49,6 +49,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
             Input({'type': 'preset_selection', 'device_id': ALL}, 'value'),
         ],
         [
+            State({'type': 'device_card', 'device_id': ALL}, 'id'),
             State('auto_mode', 'data'),
             State('device_catch_data', 'data'),
             State('devices_catch_presets', 'data'),
@@ -56,80 +57,108 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
             State('elements_initialized', 'data')
         ]
     )
-    def brightness_preset_setter(brightness_chain_trigger, preset_option, is_auto_mode, polled_cach_data,      #pylint: disable=too-many-locals, too-many-branches, too-many-arguments, too-many-positional-arguments
-                                 cached_presets, naari_settings, elements_initialized):
+    def brightness_preset_setter(_brightness_chain_trigger, preset_option, ui_card_ids, is_auto_mode, polled_cach_data,      #pylint: disable=too-many-locals, too-many-branches, too-many-arguments, too-many-positional-arguments
+        cached_presets, naari_settings, elements_initialized):
         """
             The selected preset will perform the following actions
             1) will adjust the Brightness slider widget according to current polled device data
             2) if preset is selected, will adjust the brightness widget accordingly and send a 'POST' call to the device chanigng to selected preset.
         """
+        #-------------- Helper Functions ---------#
+        def auto_mode(preset_inputs_group_order):
+            # inputs_list[1] corresponds to the second Input group: preset_selection 'value'
+            widget_ordered_preset_ids = [
+                item['id']['device_id']
+                for item in preset_inputs_group_order
+                if isinstance(item.get('id'), dict) and item.get('property') == 'value'
+            ]
+
+            # Preset set to for UI as a str ex -> "2: Work"
+            preset_values = [parse_preset_id(preset) for preset in preset_option]
+            widget_preset_mapping = dict(zip(widget_ordered_preset_ids, preset_values))
+
+            submissions = {}  # device_id -> (preset_id:int, device_info)
+
+            for dev_id, preset_id_str in widget_preset_mapping.items():
+                device_info = get_device(devices=naari_settings['devices'], device_id=dev_id)
+                if preset_id_str in (None, "", "0"):
+                    continue
+                submissions[dev_id] = (int(preset_id_str), device_info)
+
+            devices_brightness = {
+                device_id: get_brightness(device_id, preset, cached_presets)
+                for device_id, preset in widget_preset_mapping.items()
+            }
+
+            return devices_brightness, submissions
+
+        def manual_mode(devices_brightness):
+            triggered_info = ctx.triggered[0]  # {'prop_id': '...', 'value': '<id: name>'}
+            triggered_device_id = ctx.triggered_id['device_id']
+            preset_value = parse_preset_id(triggered_info.get('value'))
+
+            selected_device = get_device(
+                device_id=triggered_device_id,
+                devices=naari_settings['devices']
+            )
+
+            submissions = {}  # device_id -> (preset_id:int, device_info)
+            # For sending POST bellow
+            if preset_value not in (None, "", 0):
+                submissions[triggered_device_id] = (int(preset_value), selected_device)
+
+            # Note: preset_value must be str
+            changed_brightness = next(
+                (data['data'].get(preset_value, {}).get('bri')
+                 for data in cached_presets if data['device_id'] == triggered_device_id),
+                None
+            )
+            if changed_brightness is not None:
+                devices_brightness[triggered_device_id] = changed_brightness
+
+            return devices_brightness, submissions
+
+
+        #-------------- Main Bellow  ---------------#
         if not ctx.triggered_id or not elements_initialized:
             raise PreventUpdate
+
+        LogManager.print_message(
+            "Brightness Preset triggered",
+            to_log=TO_LOG
+        )
 
         # Build baseline: device_id -> current brightness from polled data
         try:
             devices_brightness = {
-                device['device_id']: device.get('data', 0).get('state', {}).get('bri', 0)
+                device['device_id']: (
+                    get_status(
+                        entry=device,
+                        path=['data', 'state', 'bri'],
+                        default=0
+                    )
+                )
                 for device in polled_cach_data
             }
-        except TypeError:
+        except TypeError as err:
             # polled_device data has an issue or malformed
             LogManager.print_message(
-                "Brightness setter issue. polled_device data has an issue or malformed",
+                "Brightness setter issue. polled_device data has an issue or malformed >> Error Message %s",
+                err,
                 to_log=TO_LOG,
                 log_level=logging.ERROR
             )
             raise PreventUpdate     # pylint: disable=raise-missing-from
 
         # Use the UI-rendered order for preset dropdowns to map ids -> values robustly
-        # inputs_list[1] corresponds to the second Input group: preset_selection 'value'
-        preset_inputs_group_order = dash.ctx.inputs_list[1]
-        widget_ordered_preset_ids = [
-            item['id']['device_id']
-            for item in preset_inputs_group_order
-            if isinstance(item.get('id'), dict) and item.get('property') == 'value'
-        ]
+        preset_inputs_group_order = ctx.inputs_list[1]
 
         if isinstance(ctx.triggered_id, dict) and ctx.triggered_id['type'] == 'preset_selection':
-            submissions = {}  # device_id -> (preset_id:int, device_info)
-
             if is_auto_mode:
-                # Preset set to for UI as a str ex -> "2: Work"
-                preset_values = [parse_preset_id(preset) for preset in preset_option]
-                widget_preset_mapping = dict(zip(widget_ordered_preset_ids, preset_values))
-
-                for dev_id, preset_id_str in widget_preset_mapping.items():
-                    if preset_id_str not in (None, "", "0"):
-                        device_info = get_device(devices=naari_settings['devices'], device_id=dev_id)
-                        submissions[dev_id] = (int(preset_id_str), device_info)
-
-                devices_brightness = {
-                    device_id: get_brightness(device_id, preset, cached_presets)
-                    for device_id, preset in widget_preset_mapping.items()
-                }
+                devices_brightness, submissions = auto_mode(preset_inputs_group_order)
 
             else:  # User selects specific 'Card' preset widget.
-                triggered_info = ctx.triggered[0]  # {'prop_id': '...', 'value': '<id: name>'}
-                triggered_device_id = ctx.triggered_id['device_id']
-                preset_value = parse_preset_id(triggered_info.get('value'))
-
-                selected_device = get_device(
-                    device_id=triggered_device_id,
-                    devices=naari_settings['devices']
-                )
-
-                # For sending POST bellow
-                if preset_value not in (None, "", 0):
-                    submissions[triggered_device_id] = (int(preset_value), selected_device)
-
-                # Note: preset_value must be str
-                changed_brightness = next(
-                    (data['data'].get(preset_value, {}).get('bri')
-                     for data in cached_presets if data['device_id'] == triggered_device_id),
-                    None
-                )
-                if changed_brightness is not None:
-                    devices_brightness[triggered_device_id] = changed_brightness
+                devices_brightness, submissions = manual_mode(devices_brightness)
 
             # Send presets only *after* app is loaded
             # Utilizing Threading to best simulate all lights triggering at once
@@ -151,6 +180,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
                 values_out.append(devices_brightness.get(device_id, 0))
 
         return values_out
+
 
     @app.callback(
         [
@@ -174,6 +204,11 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
         """
         if not ctx.triggered:
             raise PreventUpdate
+
+        LogManager.print_message(
+            "Brightness indicator triggered",
+            to_log=TO_LOG
+        )
 
         # Prevents turning devices on/off during initial page loading.
         if brightness_chain_trigger:
@@ -224,6 +259,7 @@ def device_controls_callbacks(app):     # pylint: disable=too-many-statements
 
 
 #----------------------------------- helper functions-----------------------#
+
 def _preset_sender(preset_value: int, target_device: DeviceConfig, ui_settings: UISettings):
     send_preset(
         preset_value=preset_value,
@@ -236,5 +272,13 @@ def parse_preset_id(preset: str):
         return None
     return preset.split(":")[0].strip()
 
+
 def get_brightness(selected_device, preset_value, presets_data):
-    return next((device['data'][preset_value].get('bri', None) for device in presets_data if device['device_id'] == selected_device), 0)
+    return next(
+        (
+            device.get('data', {}).get(preset_value, {}).get('bri', 0)
+            for device in presets_data
+            if not device.get("error") and device.get('device_id') == selected_device
+        ),
+        0
+    )
