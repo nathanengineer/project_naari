@@ -69,11 +69,6 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
         if not ctx.triggered:
             raise PreventUpdate
 
-        LogManager.print_message(
-            "Polling device interval triggered",
-            to_log=TO_LOG
-        )
-
         poll_allowed = poll_interval_trigger(
             elapsed_interval=n_interval,
             naari_config=naari_settings
@@ -146,11 +141,6 @@ def status_callbacks(app):      # pylint: disable=too-many-statements
             raise PreventUpdate
 
         triggered_id = ctx.triggered_id
-
-        LogManager.print_message(
-            "power button status triggered",
-            to_log=TO_LOG
-        )
 
         if isinstance(triggered_id, dict) and triggered_id['type'] == 'power_button':   # Button Click / Manual Entry
             devices_cach_data = cached_device_data
