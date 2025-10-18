@@ -14,7 +14,7 @@ def _power_button(device_id: int) -> dbc.Button:
     return dbc.Button(
         children= html.I(className="bi bi-power fs-5"),
         id={'type': 'power_button', 'device_id': device_id},
-        color="secondary",
+        color="Light",
         className="d-flex justify-content-center align-items-center",
         size="md"
     )
@@ -79,20 +79,13 @@ def _device_row(device_id: int):
     return dbc.Row(
         children=[
             dbc.Col(
-                children=[
-                    _power_button(device_id),
-                    # Stores used by callbacks for state/control chaining
-                    dcc.Store(id={'type': 'power_on', 'device_id': device_id}, data=None)
-                ],
+                children=_power_button(device_id),
                 xs=1,
                 md=1,
                 class_name=' d-flex justify-content-center align-items-center'
             ),
             dbc.Col(
-                children=[
-                    _preset_selections(device_id),
-                    dcc.Store(id={'type': 'preset_selection_meta', 'device_id': device_id}, data=False)
-                ],
+                children=_preset_selections(device_id),
                 xs=3,
                 md=3,
                 class_name=' d-flex justify-content-center align-items-center'
@@ -107,18 +100,11 @@ def _device_row(device_id: int):
                         gap=2,
                         children=[
                             html.Div(
-                                children=[
-                                    _brightness_slider(device_id),
-                                    dcc.Store(id={'type': 'brightness_slider_meta', 'device_id': device_id}, data=False),
-                                    dcc.Store(id={'type': 'brightness_slider_manual_update', 'device_id': device_id}, data=False)
-                                ],
+                                children=_brightness_slider(device_id),
                                 className='w-100'
                             ),
                             html.Div(
-                                children=[
-                                    _brightness_indicator(device_id),
-                                    dcc.Store(id={'type': 'brightness_indicator_interaction_meta', 'device_id': device_id}, data=False)
-                                ],
+                                children=_brightness_indicator(device_id),
                                 className='d-flex justify-content-center align-items-center'
                             )
                         ]
@@ -140,6 +126,7 @@ def _device_row(device_id: int):
 def device_card(device: DeviceConfig) -> dbc.Card:
     """ Card wrapper per device with title, controls row, and the collapse area. """
     return dbc.Card(
+        id={'type': 'device_card', 'device_id': device.get('id')},
         body=True,
         children=[
             html.H6(f"{device.get("instance_name", "").title()}"),

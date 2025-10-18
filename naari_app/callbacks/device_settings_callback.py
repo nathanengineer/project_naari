@@ -85,7 +85,7 @@ def device_settings_callback(app):
             State('naari_settings', 'data'),
         ],
     )
-    def add_remove_device_card(add_mode_click, remove_mode_clicks, current_children_set, naari_settings):    # pylint: disable=unused-argument
+    def add_remove_device_card(add_mode_click, _remove_mode_clicks, current_children_set, naari_settings):    # pylint: disable=unused-argument
 
         if not ctx.triggered:
             raise dash.exceptions.PreventUpdate
@@ -95,11 +95,11 @@ def device_settings_callback(app):
 
         if triggered == 'device_add_button' and add_mode_click:     # pylint: disable=no-else-return
 
-            # Collect existing device IDs from config and performce a safe additoin if nothing in config file.
+            # Collect existing device IDs from config and performance a safe addition if nothing in config file.
             device_ids = [device.get("id", 0) for device in naari_settings['devices']]
             next_id = (max(device_ids) + 1) if device_ids else 1        # pylint: disable=using-constant-test
 
-            # Setup the dictionary that will be sent
+            # Setup the dictionary that will be added to UI
             new_device = {
                 'id': next_id,
                 'address': "42.42.42.42",

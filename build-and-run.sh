@@ -54,6 +54,14 @@ if [[ "$USE_MACVLAN" == "1" ]]; then
   [[ -z "$CONTAINER_IP" ]] && read -rp "Enter container IP (e.g. 192.168.1.201): " CONTAINER_IP
 fi
 
+#Stop and remove existing container if it exists
+if [ "$(docker ps -aq -f name=^/${CONTAINER_NAME}$)" ]; then
+    echo "Removing existing container: $CONTAINER_NAME"
+    docker stop $CONTAINER_NAME
+    docker rm $CONTAINER_NAME
+    docker rmi $CONTAINER_NAME
+fi
+
 # === STEP 4: Build Docker image ===
 echo "🐳 Building Docker image..."
 docker build -t "$APP_NAME" .

@@ -20,7 +20,7 @@ load_dotenv(os.path.join(MAINDIR, ".env"))
 FILENAME_BASE = "naari_logs"
 
 # Note: %(message)s broken up to be 'caller function' >> message
-LOG_FORMAT = '%(asctime)s : [PID: %(process)d, TID: %(thread)d] : [%(levelname)s] : %(name)s::%(message)s'
+LOG_FORMAT = '%(asctime)s : [PID: %(process)d, TID: %(thread)d] : [%(levelname)s] : %(name)s :: %(message)s'
 DATEFORMAT = '%Y-%m-%d %H:%M:%S'
 CONSOLE_FORMAT = '[%(levelname)s] >> %(message)s'
 MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE"))     # Size in MB

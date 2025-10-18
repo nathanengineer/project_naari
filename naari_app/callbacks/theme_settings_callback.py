@@ -12,7 +12,7 @@ configuration interface — no live device commands are issued.
 import dash.exceptions
 from dash import Input, Output, State, html, ALL, ctx, MATCH
 
-from naari_app.callbacks.status_callbacks import device_preset_list
+from naari_app.callbacks.preset_population import device_preset_list
 from naari_app.modals.theme_settings_tab import theme_card
 from naari_app.util.config_builder import NaariSettingsConfig
 
@@ -45,7 +45,7 @@ def theme_settings_callback(app):
             State('naari_settings', 'data')
         ]
     )
-    def theme_device_preset_viewable(pressed_collapse_buttons_value, cach_devices_preset, naari_settings):
+    def theme_device_preset_viewable(_pressed_collapse_buttons_value, cach_devices_preset, naari_settings):
         """ Toggle theme card collapses and populate per‑device preset dropdowns for each theme. """
         if not ctx.triggered:
             raise dash.exceptions.PreventUpdate
@@ -109,11 +109,11 @@ def theme_settings_callback(app):
         [
             State('theme_cards_stack', 'children'),
             # Doesn't matter what to use as long as it has 'theme_id'
-            Input({'type': 'theme_delete', 'theme_id': ALL}, 'id'),
+            State({'type': 'theme_delete', 'theme_id': ALL}, 'id'),
             State('naari_settings', 'data'),
         ],
     )
-    def add_remove_theme_card(add_mode_click, remove_mode_clicks, current_children_set, removed_widgets, naari_settings):
+    def add_remove_theme_card(add_mode_click, _remove_mode_clicks, current_children_set, removed_widgets, naari_settings):
         """Add a new theme card or remove an existing one in the Theme Settings stack."""
         if not ctx.triggered:
             raise dash.exceptions.PreventUpdate

@@ -34,7 +34,8 @@ from naari_app.ui_parts.popups import refresh_popup
 from naari_app.modals.config_modal import config_modal
 
 from naari_app.callbacks.startup_callbacks import startup_callbacks
-from naari_app.callbacks.ui_refresh_callbacks import layout_refresh_callbacks
+from naari_app.callbacks.refresh_callbacks import refresh_callbacks      # TODO: change modular name
+from naari_app.callbacks.preset_population import preset_callbacks
 from naari_app.callbacks.status_callbacks import status_callbacks
 from naari_app.callbacks.device_controls_callbacks import device_controls_callbacks
 from naari_app.callbacks.global_controls_callbacks import global_controls_callback
@@ -52,8 +53,8 @@ load_dotenv(os.path.join(MAINDIR, ".env"))
 
 HOST = os.getenv("HOST")
 PORT = int(os.getenv("PORT"))
-DEBUG = os.getenv("DEBUG") == "1"
-RELOADER = os.getenv("USE_RELOADER") == "1"  # keep off while debugging async
+DEBUG = int(os.getenv("DEBUG", "0")) == 1    # Not using int because of python odd TypeError thinking its a NoneType.
+RELOADER = int(os.getenv("USE_RELOADER", "0")) == 1  # keep off while debugging async
 TO_LOG = int(os.getenv("LOGGING", "0")) == 1
 
 def app_layout():
@@ -79,7 +80,8 @@ def app_layout():
                     dcc.Location(id='url', refresh=False),
                     # converting interval from sec -> ms
                     dcc.Interval(id='poll_interval', interval=(naari_settings['ui_settings']['polling_rate']['value'] * 1000), n_intervals=0, disabled=True),
-                    dcc.Store("reset_poll_interval", data=False, storage_type='session'),
+                    #dcc.Store("reset_poll_interval", data=False, storage_type='session'),
+                    html.Div(id="reset_poll_interval", n_clicks=0),
 
                     # Hidden stores (default shapes matter for downstream callbacks)
                     dcc.Store(id='naari_settings', data=naari_settings, storage_type='session'),
@@ -92,6 +94,7 @@ def app_layout():
                     dcc.Store(id='data_app_load_check', data=False, storage_type='session'),
                     dcc.Store(id='init_brightness_chain_trigger', data=None, storage_type='session'),
                     html.Div(id='brightness_chain_trigger', n_clicks=0),
+                    html.Div(id='refresh_chain_trigger', n_clicks=0),
 
                     dcc.Store(id='auto_mode', data=False),  # Initial_Auto_Mode
 
@@ -160,7 +163,8 @@ def dash_app():
 
     # register your callback groups (they already take `app`)
     startup_callbacks(app)
-    layout_refresh_callbacks(app)
+    refresh_callbacks(app)
+    preset_callbacks(app)
     status_callbacks(app)
     device_controls_callbacks(app)
     main_content_callback(app)
@@ -175,8 +179,10 @@ def dash_app():
     @app.callback(
         Output('elements_initialized', 'data'),
         Input('device_catch_data', 'data'),
-        State('elements_initialized', 'data')
+        State('elements_initialized', 'data'),
+        prevent_initial_call=True
     )
+
     def elements_started(_, prev):
         """Mark the app as initialized once device data has been set at least once."""
         return True
